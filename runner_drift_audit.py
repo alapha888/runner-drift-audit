@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+"""runner-drift-audit: scan GitHub Actions workflows for breakage risks in the
+ubuntu-latest 24.04 -> 26.04 runner migration (Oct 19 - Nov 19, 2026).
+
+Rules are grounded in the official actions/runner-images toolsets
+(toolset-2404.json vs toolset-2604.json, compared 2026-10-10):
+
+  - Java default 17 -> 25, Java 8 removed
+  - Node default 22 -> 24; preinstalled global tools shrink to n + yarn
+    (webpack, gulp, grunt, parcel, lerna, newman, typescript/tsc removed)
+  - PHP 8.3 -> 8.5 only; PostgreSQL 16 -> 18
+  - clang default 18 -> 21 (16/17 removed); gcc/gfortran 12 removed
+  - CMake was pinned to 3.31.6 (to avoid CMake 4.0 issues), now "latest"
+  - Docker 28.0.4 -> 29.4.2, compose 2.38.2 -> 5.1.3
+  - apt packages removed: haveged, mediainfo, sphinxsearch, mercurial
+    (p7zip-full replaced by 7zip); ruby gem fastlane no longer preinstalled
+  - Go default 1.24 -> 1.26
+
+Usage: python3 runner_drift_audit.py [path-to-repo-or-workflows-dir]
+Exit code: 1 if any HIGH finding, else 0. Stdlib only.
+"""
+import os
+import re
+import sys
+
+# Commands whose backing package/tool disappeared from the 26.04 image.
+REMOVED_COMMANDS = {
+    "hg": "mercurial was removed from the Ubuntu 26.04 runner image",
+    "mediainfo": "mediainfo was removed from the Ubuntu 26.04 runner image",
+    "sphinxsearch": "sphinxsearch was removed from the Ubuntu 26.04 runner image",
+    "searchd": "sphinxsearch (searchd) was removed from the Ubuntu 26.04 runner image",
+    "haveged": "haveged was removed from the Ubuntu 26.04 runner image",
+    "fastlane": "the fastlane ruby gem is no longer preinstalled in the Ubuntu 26.04 runner image",
+    "webpack": "webpack is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "gulp": "gulp is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "grunt": "grunt is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "parcel": "parcel is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "lerna": "lerna is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "newman": "newman is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "tsc": "typescript (tsc) is no longer preinstalled globally in the Ubuntu 26.04 runner image (only n and yarn remain)",
+    "gcc-12": "gcc 12 was removed from the Ubuntu 26.04 runner image (13/14/15 remain)",
+    "g++-12": "g++ 12 was removed from the Ubuntu 26.04 runner image (13/14/15 remain)",
+    "gfortran-12": "gfortran 12 was removed from the Ubuntu 26.04 runner image (13/14/15 remain)",
+    "clang-16": "clang 16 was removed from the Ubuntu 26.04 runner image (20/21/22 remain)",
+    "clang-17": "clang 17 was removed from the Ubuntu 26.04 runner image (20/21/22 remain)",
+    "p7zip": "p7zip-full was replaced by 7zip in the Ubuntu 26.04 runner image; check 7z invocations and package names",
+}
+
+# Tools whose *default* version changes when no setup-* action pins it.
+DEFAULT_DRIFT = [
+    (re.compile(r"\b(java|javac|mvn|gradle)\b"), "java",
+     "Java default changes 17 -> 25 in the Ubuntu 26.04 image (and Java 8 is removed); pin with actions/setup-java"),
+    (re.compile(r"\b(node|npm|npx)\b"), "node",
+     "Node default changes 22 -> 24 in the Ubuntu 26.04 image; pin with actions/setup-node"),
+    (re.compile(r"\bphp\b"), "php",
+     "PHP changes 8.3 -> 8.5 (only version shipped) in the Ubuntu 26.04 image; pin with shivammathur/setup-php"),
+    (re.compile(r"\b(psql|pg_ctl|postgres)\b"), "postgres",
+     "PostgreSQL default changes 16 -> 18 in the Ubuntu 26.04 image; pin a version explicitly"),
+    (re.compile(r"\bcmake\b"), "cmake",
+     "CMake was pinned to 3.31.6 on 24.04 to avoid CMake 4.0 compatibility issues; the 26.04 image ships latest, so CMake 4 behavior may apply"),
+    (re.compile(r"\bclang\b"), "clang",
+     "clang default changes 18 -> 21 in the Ubuntu 26.04 image; pin a version explicitly"),
+    (re.compile(r"\bgo\b(?=\s+(build|test|run|vet))"), "go",
+     "Go default changes 1.24 -> 1.26 in the Ubuntu 26.04 image; pin with actions/setup-go"),
+    (re.compile(r"docker\s+compose\b"), "docker",
+     "Docker Compose changes 2.38.2 -> 5.1.3 (and Docker 28 -> 29) in the Ubuntu 26.04 image; test compose files against v5"),
+]
+
+SETUP_FOR = {
+    "java": "setup-java", "node": "setup-node", "php": "setup-php",
+    "postgres": None, "cmake": None, "clang": None, "go": "setup-go",
+    "docker": None,
+}
+
+USES_RE = re.compile(r"^\s*-?\s*uses:\s*([^\s#]+)")
+RUNSON_RE = re.compile(r"^\s*-?\s*runs-on:\s*(.+)$")
+SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+SEG_SPLIT = re.compile(r"&&|\|\||;|\|")
+QUOTE_RE = re.compile(r"\"[^\"\n]*\"|'[^'\n]*'")
+PREFIX_WORDS = {"sudo", "env", "command", "time", "xargs"}
+ASSIGN_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
+
+
+def command_heads(text):
+    """First command word of each shell segment, honouring quotes and
+    common prefixes (sudo, env, VAR=val, subshell parens)."""
+    text = QUOTE_RE.sub(" ", text)
+    heads = []
+    for seg in SEG_SPLIT.split(text):
+        toks = seg.strip().lstrip("({ ").split()
+        i = 0
+        while i < len(toks) and (toks[i] in PREFIX_WORDS or ASSIGN_RE.match(toks[i])):
+            i += 1
+        if i < len(toks):
+            heads.append(toks[i].strip("()"))
+    return heads
+
+
+def find_workflows(root):
+    cands = []
+    wf_dir = os.path.join(root, ".github", "workflows")
+    if os.path.isdir(wf_dir):
+        cands = [os.path.join(wf_dir, f) for f in sorted(os.listdir(wf_dir))]
+    elif os.path.isdir(root):
+        cands = [os.path.join(root, f) for f in sorted(os.listdir(root))]
+    return [p for p in cands if p.endswith((".yml", ".yaml")) and os.path.isfile(p)]
+
+
+def audit_file(path):
+    findings = []  # (severity, line_no, rule, message)
+    with open(path, encoding="utf-8", errors="replace") as fh:
+        lines = fh.read().splitlines()
+    text = "\n".join(lines)
+    on_ubuntu = bool(re.search(r"ubuntu-(latest|24\.04|26\.04)", text))
+    setup_present = {k: (v and v in text) for k, v in SETUP_FOR.items()}
+    seen_drift = set()
+    run_block_indent = None  # indent of a `run: |` key while inside its block
+
+    for i, line in enumerate(lines, 1):
+        # Track multi-line run blocks by indentation.
+        is_run_line = False
+        run_text = line
+        if run_block_indent is not None:
+            if line.strip() == "":
+                is_run_line = True
+            elif len(line) - len(line.lstrip()) > run_block_indent:
+                is_run_line = True
+            else:
+                run_block_indent = None
+        m_run = re.match(r"^(\s*)-?\s*run:\s*(.*)$", line)
+        if m_run:
+            rest = m_run.group(2).strip()
+            if re.match(r"^[|>][0-9]*[+-]?\s*(#.*)?$", rest):
+                run_block_indent = len(m_run.group(1)) + (2 if line.lstrip().startswith("- ") else 0)
+                is_run_line = False
+            elif rest:
+                is_run_line = True
+                run_text = rest
+        if not is_run_line:
+            m = RUNSON_RE.search(line)
+            if m:
+                labels = [t.strip(" '\"[],") for t in m.group(1).split(",")]
+                for lab in labels:
+                    if lab.endswith("-latest"):
+                        findings.append(("HIGH", i, "FLOATING_LABEL",
+                                         f"runs-on '{lab}' is a floating label; for Ubuntu it moves "
+                                         "24.04 -> 26.04 between Oct 19 and Nov 19, 2026. Pin ubuntu-24.04 "
+                                         "to stay, or ubuntu-26.04 to migrate deliberately."))
+            m = USES_RE.search(line)
+            if m:
+                ref = m.group(1).strip("'\"")
+                if "@" in ref and not ref.startswith(("./", "docker://")):
+                    name, _, version = ref.rpartition("@")
+                    if not SHA_RE.match(version):
+                        findings.append(("WARN", i, "UNPINNED_ACTION",
+                                         f"action '{name}' is referenced by mutable tag '{version}', "
+                                         "not a full commit SHA; the tag can move under you."))
+        if on_ubuntu and is_run_line:
+            for cmd in command_heads(run_text):
+                if cmd in REMOVED_COMMANDS:
+                    findings.append(("HIGH", i, "REMOVED_TOOL", REMOVED_COMMANDS[cmd] + "."))
+            for rx, tool, msg in DEFAULT_DRIFT:
+                if setup_present.get(tool) or tool in seen_drift:
+                    continue
+                if rx.search(QUOTE_RE.sub(" ", run_text)):
+                    findings.append(("WARN", i, "DEFAULT_DRIFT", msg + "."))
+                    seen_drift.add(tool)
+                    break
+    return findings
+
+
+def main(argv):
+    root = argv[1] if len(argv) > 1 else "."
+    files = find_workflows(root)
+    if not files:
+        print(f"No workflow files found under {root} (.github/workflows or *.yml/*.yaml).")
+        return 0
+    total_high = 0
+    for path in files:
+        findings = audit_file(path)
+        if not findings:
+            print(f"OK      {path}")
+            continue
+        print(f"\n{path}")
+        for sev, ln, rule, msg in findings:
+            if sev == "HIGH":
+                total_high += 1
+            print(f"  [{sev}] line {ln} {rule}: {msg}")
+    print(f"\nScanned {len(files)} workflow file(s); HIGH findings: {total_high}.")
+    print("Rule sources: actions/runner-images toolset-2404.json vs toolset-2604.json.")
+    return 1 if total_high else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

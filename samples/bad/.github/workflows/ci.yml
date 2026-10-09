@@ -1,0 +1,14 @@
+name: ci
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: build
+        run: |
+          java -version
+          mvn -q package
+          hg log -r tip || true
+          webpack --mode production
+          cmake -B build && cmake --build build
