@@ -18,12 +18,27 @@ runs:
   steps:
     - name: Run runner drift audit
       shell: bash
+      env:
+        SCAN_PATH: ${{ inputs.path }}
+        FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
       run: |
+        case "$FAIL_ON_HIGH" in
+          true|false) ;;
+          *) echo "::error::fail-on-high must be 'true' or 'false', got '$FAIL_ON_HIGH'"; exit 2 ;;
+        esac
         set +e
-        python3 "${{ github.action_path }}/runner_drift_audit.py" "${{ inputs.path }}"
-        code=$?
-        if [ "$code" -ne 0 ] && [ "${{ inputs.fail-on-high }}" != "true" ]; then
+        out="$(mktemp)"
+        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" | tee "$out"
+        code=${PIPESTATUS[0]}
+        if [ "$code" -eq 0 ]; then
+          exit 0
+        fi
+        if ! grep -q "HIGH findings:" "$out"; then
+          echo "::error::scanner failed to run (exit $code)"
+          exit "$code"
+        fi
+        if [ "$FAIL_ON_HIGH" = "false" ]; then
           echo "HIGH findings present but fail-on-high is false; reporting only."
           exit 0
         fi
-        exit $code
+        exit "$code"
