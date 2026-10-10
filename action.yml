@@ -1,0 +1,29 @@
+name: "Runner Drift Audit"
+description: "Scan GitHub Actions workflows for floating runner labels, unpinned action refs, and tool drift ahead of the ubuntu-latest 24.04 to 26.04 migration."
+author: "alapha888"
+branding:
+  icon: "alert-triangle"
+  color: "orange"
+inputs:
+  path:
+    description: "Path to the repository or directory to scan (must contain .github/workflows)."
+    required: false
+    default: "."
+  fail-on-high:
+    description: "Fail the step when any HIGH finding exists. Set to 'false' to report only."
+    required: false
+    default: "true"
+runs:
+  using: "composite"
+  steps:
+    - name: Run runner drift audit
+      shell: bash
+      run: |
+        set +e
+        python3 "${{ github.action_path }}/runner_drift_audit.py" "${{ inputs.path }}"
+        code=$?
+        if [ "$code" -ne 0 ] && [ "${{ inputs.fail-on-high }}" != "true" ]; then
+          echo "HIGH findings present but fail-on-high is false; reporting only."
+          exit 0
+        fi
+        exit $code

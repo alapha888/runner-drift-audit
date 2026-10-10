@@ -14,6 +14,20 @@ python3 runner_drift_audit.py [path-to-repo]   # default: current directory
 
 Exit code is 1 when any HIGH finding exists, so it can gate a CI job. Sample workflows live in `samples/bad` and `samples/clean`.
 
+## Use as a GitHub Action
+
+The same scanner ships as a composite action in this repository, so a workflow can gate on it directly:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: alapha888/runner-drift-audit@v0.2.0
+  with:
+    path: "."              # directory that contains .github/workflows
+    fail-on-high: "true"   # set to "false" to report findings without failing
+```
+
+`fail-on-high: "true"` (the default) exits 1 when any HIGH finding exists; `"false"` prints the same report and always passes. No Marketplace listing is required to use the `uses:` form above.
+
 ## What it checks
 
 Rules are grounded in a diff of the official `actions/runner-images` toolsets (`toolset-2404.json` vs `toolset-2604.json`, compared 2026-10-10 — 22 differences):
