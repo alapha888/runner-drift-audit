@@ -39,6 +39,17 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 |
 | Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` |
 
+## Migration checklist
+
+Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
+
+1. **Inventory first.** List every file in `.github/workflows` and confirm each one is expected — a migration is one of the few moments teams look at the whole set, and an unfamiliar file is worth a question before anything runs on a new image.
+2. **Scan.** Run the scanner (or add the composite Action) and work through the report line by line.
+3. **Clear the HIGH findings.** Pin `runs-on` to `ubuntu-24.04` if you are not ready to migrate, or move deliberately to `ubuntu-26.04`; replace or drop steps that invoke removed tools (for example `hg`, `mediainfo`, `gcc-12`).
+4. **Pin what drifts.** Where a WARN flags a default version change (Java, Node, PHP, PostgreSQL, Go, clang, CMake, Docker), pin the version explicitly instead of relying on the image default — a setup action for language runtimes, a service or image pin for PostgreSQL and Docker.
+5. **Review action refs.** Mutable tags are flagged as WARN; pin to a full SHA where your policy requires it.
+6. **Re-run** until no HIGH findings remain, and keep the final report with the migration PR so reviewers can see what was checked.
+
 ## Limits
 
 - This is a line scanner with shell-aware heuristics (quotes, `sudo`/`env`/`VAR=val` prefixes, multi-line `run:` blocks), not a full YAML/shell parser. Treat findings as a review checklist, not a proof.
