@@ -59,8 +59,12 @@ Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
 2. **Scan.** Run the scanner (or add the composite Action) and work through the report line by line.
 3. **Clear the HIGH findings.** Pin `runs-on` to `ubuntu-24.04` if you are not ready to migrate, or move deliberately to `ubuntu-26.04`; replace or drop steps that invoke removed tools (for example `hg`, `mediainfo`, `gcc-12`).
 4. **Pin what drifts.** Where a WARN flags a default version change (Java, Node, PHP, PostgreSQL, Go, clang, CMake, Docker), pin the version explicitly instead of relying on the image default — a setup action for language runtimes, a service or image pin for PostgreSQL and Docker.
-5. **Review action refs.** Mutable tags are flagged as WARN; pin to a full SHA where your policy requires it.
-6. **Re-run** until no HIGH findings remain, and keep the final report with the migration PR so reviewers can see what was checked.
+5. **Enumerate container images by tag.** List the images your workflows pull by tag (service containers, `container:` jobs, `docker pull` steps). Their base can move to the new image generation on a schedule you do not control, independently of the runner label — pin by digest or to an explicit tag where the image contents matter. This is a manual pass; the scanner does not inspect image references.
+6. **Check locale and timezone defaults.** If anything in your pipeline diffs or parses log output, timestamps, or sorted text, record the current locale/timezone behaviour and re-check it after the move. Default changes here bite even single-language projects, and they do not show up as version bumps.
+7. **Review action refs.** Mutable tags are flagged as WARN; pin to a full SHA where your policy requires it.
+8. **Re-run** until no HIGH findings remain, and keep the final report with the migration PR so reviewers can see what was checked.
+
+Treat the checklist and the differences list as a filter, not a list to shorten: for every row that does not apply, write "not installed / not used, checked on <date>" instead of deleting it. Proving most rows inert is the value — an unchecked row and a checked-inert row look identical in a shortened list, and only one of them is evidence.
 
 ## Limits
 
