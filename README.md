@@ -63,6 +63,8 @@ Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
 - This is a line scanner with shell-aware heuristics (quotes, `sudo`/`env`/`VAR=val` prefixes, multi-line `run:` blocks), not a full YAML/shell parser. Treat findings as a review checklist, not a proof.
 - It checks invocations in `run:` steps and labels in `runs-on:`; it does not execute anything and does not phone home.
 
-## Paid option (built — not on sale yet)
+## Paid option — Pro edition (on sale)
 
-A one-time **fleet audit**: one combined report across every repository in a local workspace, priced at **$29 one-time**. It has been built ahead of the migration window and is being prepared for release; it is not on sale yet, and no payment is being taken. To register interest, [email the maintainer](mailto:alapha888@gmail.com?subject=%5BRunnerDrift%20Fleet%5D%20interest) with subject `[RunnerDrift Fleet] interest` and say how many repos you would scan. No payment, no newsletter — one reply if it ships, one if it doesn't.
+The multi-repo edition is on sale: **RunnerDriftAudit Pro** scans every repository in a local workspace in one run and writes one combined HTML report (cross-repo summary table, per-repo findings with file and line, and a fix checklist per repo). **$29 one-time** on Gumroad: https://alapha888.gumroad.com/l/mepra
+
+The audit rules and findings are identical to this free edition — Pro is the fleet-wide run and the single combined document.
