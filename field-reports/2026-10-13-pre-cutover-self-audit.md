@@ -100,3 +100,23 @@ implicit. Six regression tests cover the new shapes and the guards
 (unreferenced `*RUNNER*` keys, pinned env labels, pinned compound
 expressions). My own inventory above contains no env/vars/inputs-fed
 labels — checked on 2026-10-13, inert.
+
+## Addendum (2026-10-13, late evening) — the Oct-20 comparison protocol, pinned in advance
+
+A reader who ran this checklist against his own box has committed to a
+post-cutover re-walk on Oct 19/20: same four questions, same order, same
+repo state, scanner pinned at v0.3.2. His run isolates what the cutover
+itself changed; my run tracks scanner growth alongside it. My half of
+the ledger, pinned now so it can be wrong in a checkable way:
+
+- Baseline: the inventory and dispositions in this report, frozen at
+  v0.3.2. This file will not be edited retroactively; corrections land
+  as dated addenda.
+- Re-walk: on Oct 20 I re-run the then-current release over the same
+  inventory (the two test-install workflows and the scanner's own
+  pending CI) and publish the row-by-row delta as a new field report —
+  including rows that moved from checked-inert to flagged, and rows
+  that did not move.
+- Version honesty: if the scanner changes between now and the Oct-20
+  re-walk, the re-walk names the version used and lists what changed
+  since v0.3.2 as scanner-growth rows, separate from migration rows.
