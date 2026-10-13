@@ -14,6 +14,14 @@ python3 runner_drift_audit.py [path-to-repo]   # default: current directory
 
 Exit code is 1 when any HIGH finding exists, so it can gate a CI job. Sample workflows live in `samples/bad` and `samples/clean`.
 
+## Generate a migration-readiness report
+
+```bash
+python3 generate_report.py [path-to-repo] [--out DIR]
+```
+
+Writes `migration-readiness-report.md` and `migration-readiness-report.html` into the output directory (default `runner-drift-report/`): a severity summary, findings per workflow file, the full toolset-differences table, and a fix checklist derived from the findings — the file you attach to a migration PR. Exit code matches the scanner (1 when any HIGH finding exists). A sample report generated from `samples/bad` lives in `samples/report/`. Tests: `python3 -m unittest discover -s tests`.
+
 ## Use as a GitHub Action
 
 The same scanner ships as a composite action in this repository, so a workflow can gate on it directly:
