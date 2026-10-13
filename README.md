@@ -63,6 +63,6 @@ Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
 - This is a line scanner with shell-aware heuristics (quotes, `sudo`/`env`/`VAR=val` prefixes, multi-line `run:` blocks), not a full YAML/shell parser. Treat findings as a review checklist, not a proof.
 - It checks invocations in `run:` steps and labels in `runs-on:`; it does not execute anything and does not phone home.
 
-## Planned paid option (validation only — not built, not for sale yet)
+## Paid option (built — not on sale yet)
 
-A one-time **fleet audit**: one report across every repo in your GitHub account or org, priced at **$29 one-time** if built. It will only be built if at least 20 people ask for it before the migration window closes on November 19, 2026. To register interest, [email the maintainer](mailto:alapha888@gmail.com?subject=%5BRunnerDrift%20Fleet%5D%20interest) with subject `[RunnerDrift Fleet] interest` and say how many repos you would scan. No payment, no newsletter — one reply if it ships, one if it doesn't.
+A one-time **fleet audit**: one combined report across every repository in a local workspace, priced at **$29 one-time**. It has been built ahead of the migration window and is being prepared for release; it is not on sale yet, and no payment is being taken. To register interest, [email the maintainer](mailto:alapha888@gmail.com?subject=%5BRunnerDrift%20Fleet%5D%20interest) with subject `[RunnerDrift Fleet] interest` and say how many repos you would scan. No payment, no newsletter — one reply if it ships, one if it doesn't.
