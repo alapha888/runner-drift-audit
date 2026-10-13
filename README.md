@@ -49,7 +49,7 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 
 ## Machine-readable differences list
 
-The complete 24.04 to 26.04 toolset differences table is available as a CSV in this repository: [`toolset-differences-2404-2604.csv`](toolset-differences-2404-2604.csv) (24 data rows, grouped into the 22 differences figure). It includes the following columns: `category`, `tool`, `change_type`, `ubuntu_2404`, `ubuntu_2604`, `ci_impact`, `mitigation`. As a plain CSV, it can be checked mechanically in a CI job or spreadsheet rather than requiring a human to read a prose changelog. The report generator uses this same file as its source.
+The complete 24.04 to 26.04 toolset differences table is available as a CSV in this repository: [`toolset-differences-2404-2604.csv`](toolset-differences-2404-2604.csv) (24 data rows, grouped into the 22 differences figure). It includes the following columns: `category`, `tool`, `change_type`, `ubuntu_2404`, `ubuntu_2604`, `ci_impact`, `mitigation`. The file's first line is a `# schema-v1:` comment row documenting each column's type and the allowed `change_type` values, so the schema travels with the data — skip lines starting with `#` before parsing (the bundled report generator does). As a plain CSV, it can be checked mechanically in a CI job or spreadsheet rather than requiring a human to read a prose changelog. The report generator uses this same file as its source.
 
 ## Migration checklist
 

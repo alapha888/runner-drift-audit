@@ -44,6 +44,13 @@ class RenderTests(unittest.TestCase):
         self.assertGreaterEqual(len(self.diffs), 22)
         self.assertIn("tool", self.diffs[0])
 
+    def test_differences_schema_comment_skipped(self):
+        # The CSV's first line is a "# schema-v1:" comment row; the loader
+        # must skip it and still return exactly the 24 data rows.
+        self.assertEqual(len(self.diffs), 24)
+        self.assertEqual(self.diffs[0]["tool"], "mercurial (hg)")
+        self.assertEqual(self.diffs[0]["change_type"], "removed")
+
     def test_markdown_sections(self):
         md = gr.render_markdown(self.results, self.diffs)
         for needle in ("Migration readiness report", "Findings by workflow",

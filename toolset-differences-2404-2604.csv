@@ -1,3 +1,4 @@
+# schema-v1: category:string, tool:string, change_type:enum(removed|removed_global|default_changed|renamed|unpinned), ubuntu_2404:string, ubuntu_2604:string, ci_impact:string, mitigation:string (lines starting with # are comments - skip before parsing)
 category,tool,change_type,ubuntu_2404,ubuntu_2604,ci_impact,mitigation
 removed,mercurial (hg),removed,preinstalled,removed,Workflows invoking hg will fail,Install mercurial explicitly or migrate to git
 removed,mediainfo,removed,preinstalled,removed,Workflows invoking mediainfo will fail,Install mediainfo explicitly in a setup step

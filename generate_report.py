@@ -55,11 +55,16 @@ def collect_results(root):
 
 
 def load_differences(csv_path=DIFFS_CSV):
-    """Load the toolset differences table; [] when the CSV is absent."""
+    """Load the toolset differences table; [] when the CSV is absent.
+
+    Lines starting with # are schema/comment rows and are skipped before
+    parsing, so the CSV header row stays the first non-comment line.
+    """
     if not os.path.isfile(csv_path):
         return []
     with open(csv_path, newline="", encoding="utf-8") as fh:
-        return list(csv.DictReader(fh))
+        rows = (line for line in fh if not line.lstrip().startswith("#"))
+        return list(csv.DictReader(rows))
 
 
 def build_checklist(results):
