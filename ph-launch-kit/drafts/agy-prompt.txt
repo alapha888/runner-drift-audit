@@ -1,0 +1,18 @@
+You are drafting Product Hunt launch copy for an open-source developer tool. Output ONLY the copy itself, in the structure requested. No research, no file access, no commentary.
+
+PRODUCT FACTS (do not invent anything beyond these):
+- Name: RunnerDriftAudit
+- What it is: a free, open-source (MIT) command-line tool, a single Python file using only the standard library, no dependencies. Repo: https://github.com/alapha888/runner-drift-audit — v0.1.0 released.
+- Problem: GitHub is moving the `ubuntu-latest` runner label from Ubuntu 24.04 to Ubuntu 26.04 between October 19 and November 19, 2026. Nothing in a repo changes — the machine underneath CI changes. Based on a diff of GitHub's official runner-images toolsets (toolset-2404.json vs toolset-2604.json), there are 22 toolset differences that can break or silently alter CI builds: removed tools (mercurial/hg, mediainfo, webpack/gulp/grunt global installs, gcc-12, clang-16/17, p7zip), default version jumps (Java 17→25 with Java 8 removed, Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, Go 1.24→1.26, Docker 28→29), and unpinned CMake.
+- What the tool does: scans a repo's GitHub Actions workflow files and reports, line by line, floating runner labels (runs-on: ubuntu-latest), removed tools invoked in run steps, default-version drift where no setup action pins a version, and actions referenced by mutable tags instead of full SHAs. Findings are graded HIGH / WARN. Exit code is 1 when any HIGH finding exists, so it can gate a CI job.
+- Real test results: on the bundled "bad" sample workflow it reports 3 HIGH + 3 WARN (floating label, removed mercurial, removed webpack, plus Java/CMake drift and an unpinned action). On the "clean" sample it reports 0 HIGH.
+- Paid option: NOT built and NOT for sale. A $29 one-time multi-repo "fleet audit" report is only being considered; it will only be built if 20+ people register interest by email before Nov 19, 2026. The copy must NOT imply any paid product is available for purchase now. It is fine to mention the CLI is free and open source.
+- Launch timing: launching on Product Hunt Oct 17–18, 2026, right before the migration window opens Oct 19.
+
+TONE: restrained, factual, no hype, no superlatives ("revolutionary", "game-changing", "blazing" are banned), no unverified efficiency claims. Written for developers who run GitHub Actions.
+
+DELIVER, in this exact structure:
+1. TAGLINE: one line, max 60 characters.
+2. DESCRIPTION: 120–200 words for the Product Hunt product page. Cover: the Oct 19 migration, the 22 differences, what the tool scans and reports, free/open-source/single-file, exit-code CI gating.
+3. TOPICS: 3–5 Product Hunt topics (short phrases).
+4. MAKER FIRST COMMENT: 130–190 words, first person from the maker. Explain why it was built (the label moves under you silently; the official toolset diff is public but nobody reads two giant JSON files), how the rules were derived (diffing the two official toolset JSONs), the real sample results (bad sample 3 HIGH + 3 WARN, clean sample 0 HIGH), the honest limits (it is a line scanner with heuristics, not a full YAML/shell parser; findings are a review checklist, not a proof), and an open question inviting readers to share what the migration breaks for them. Do NOT pitch a paid product as available.

@@ -28,7 +28,7 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.0
+- uses: alapha888/runner-drift-audit@v0.3.1
   with:
     path: "."              # directory that contains .github/workflows
     fail-on-high: "true"   # set to "false" to report findings without failing
@@ -42,7 +42,7 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 
 | Rule | Severity | Examples from the official toolset diff |
 |---|---|---|
-| Floating runner label | HIGH | `runs-on: ubuntu-latest` (also quoted / list forms) |
+| Floating runner label | HIGH | `runs-on: ubuntu-latest` (also quoted / list forms, and labels referenced from a matrix axis or other list) |
 | Removed tool invoked in a run step | HIGH | `hg` (mercurial removed), `mediainfo`, `sphinxsearch`, `haveged`, `fastlane` gem, globally preinstalled `webpack`/`gulp`/`grunt`/`parcel`/`lerna`/`newman`/`tsc` (only `n` and `yarn` remain), `gcc-12`, `clang-16/17`, `p7zip` |
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 |
 | Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` |
@@ -66,10 +66,14 @@ Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
 
 Treat the checklist and the differences list as a filter, not a list to shorten: for every row that does not apply, write "not installed / not used, checked on <date>" instead of deleting it. Proving most rows inert is the value — an unchecked row and a checked-inert row look identical in a shortened list, and only one of them is evidence.
 
+## Field reports
+
+- [2026-10-13 — pre-cutover self-audit](field-reports/2026-10-13-pre-cutover-self-audit.md): this checklist run against the workflows maintained here, including where the scanner itself bent (it missed matrix-axis labels until v0.3.1).
+
 ## Limits
 
 - This is a line scanner with shell-aware heuristics (quotes, `sudo`/`env`/`VAR=val` prefixes, multi-line `run:` blocks), not a full YAML/shell parser. Treat findings as a review checklist, not a proof.
-- It checks invocations in `run:` steps and labels in `runs-on:`; it does not execute anything and does not phone home.
+- It checks invocations in `run:` steps and runner labels in `runs-on:` (including labels referenced from a matrix axis or another list in the same file); it does not execute anything and does not phone home.
 
 ## Paid option — Pro edition (on sale)
 

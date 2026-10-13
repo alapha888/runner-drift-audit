@@ -1,0 +1,22 @@
+name: self-test
+on:
+  push:
+  pull_request:
+jobs:
+  clean-sample:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit the clean sample (expect pass)
+        uses: ./
+        with:
+          path: samples/clean
+  bad-sample-report-only:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Audit the bad sample (expect HIGH findings, report only)
+        uses: ./
+        with:
+          path: samples/bad
+          fail-on-high: "false"

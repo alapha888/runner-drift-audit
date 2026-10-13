@@ -74,6 +74,35 @@ SETUP_FOR = {
 
 USES_RE = re.compile(r"^\s*-?\s*uses:\s*([^\s#]+)")
 RUNSON_RE = re.compile(r"^\s*-?\s*runs-on:\s*(.+)$")
+# A floating label can also hide in a bracket list on another key (the usual
+# case: a matrix axis such as `os: [ubuntu-latest, windows-latest]`) or as a
+# bare list item (a block matrix axis, or a multi-line `runs-on:` list).
+# Outside a `runs-on:` line the context is ambiguous, so list detection is
+# deliberately narrow: bracket lists only on the `os` axis or on a key the
+# file actually references as `matrix.<key>`, and bare items / list entries
+# only when they carry a GitHub-hosted runner prefix (ubuntu-/windows-/
+# macos-). A `- docker-latest` argument or a `browser: [chrome-latest]`
+# axis is not a runner label and must not be flagged.
+LIST_KEY_RE = re.compile(r"^\s*-?\s*([\w.-]+):\s*\[([^\]]*)\]")
+LIST_ITEM_LABEL_RE = re.compile(
+    r"^\s*-\s*['\"]?((?:ubuntu|windows|macos)-[A-Za-z0-9._-]*latest)"
+    r"['\"]?\s*(#.*)?$")
+RUNNER_PREFIXES = ("ubuntu-", "windows-", "macos-")
+
+
+def is_runner_label(lab):
+    return lab.startswith(RUNNER_PREFIXES)
+
+
+def floating_label_message(lab, via=""):
+    if lab == "ubuntu-latest":
+        return (f"runner label '{lab}' is a floating label{via}; it moves "
+                "24.04 -> 26.04 between Oct 19 and Nov 19, 2026. Pin "
+                "ubuntu-24.04 to stay, or ubuntu-26.04 to migrate deliberately.")
+    return (f"runner label '{lab}' is a floating label{via}; it moves to a "
+            "new image generation on the provider's schedule, outside this "
+            "scanner's Ubuntu migration window. Pin a versioned label if "
+            "this job needs to stay stable.")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SEG_SPLIT = re.compile(r"&&|\|\||;|\|")
 QUOTE_RE = re.compile(r"\"[^\"\n]*\"|'[^'\n]*'")
@@ -111,6 +140,7 @@ def audit_file(path):
     with open(path, encoding="utf-8", errors="replace") as fh:
         lines = fh.read().splitlines()
     text = "\n".join(lines)
+    matrix_keys = set(re.findall(r"matrix\.([\w-]+)", text))
     on_ubuntu = bool(re.search(r"ubuntu-(latest|24\.04|26\.04)", text))
     setup_present = {k: (v and v in text) for k, v in SETUP_FOR.items()}
     seen_drift = set()
@@ -143,9 +173,26 @@ def audit_file(path):
                 for lab in labels:
                     if lab.endswith("-latest"):
                         findings.append(("HIGH", i, "FLOATING_LABEL",
-                                         f"runs-on '{lab}' is a floating label; for Ubuntu it moves "
-                                         "24.04 -> 26.04 between Oct 19 and Nov 19, 2026. Pin ubuntu-24.04 "
-                                         "to stay, or ubuntu-26.04 to migrate deliberately."))
+                                         floating_label_message(lab)))
+            else:
+                mb = LIST_KEY_RE.match(line)
+                if mb and (mb.group(1) == "os"
+                           or mb.group(1) in matrix_keys):
+                    for raw in mb.group(2).split(","):
+                        lab = raw.split("#")[0].strip(" '\"")
+                        if lab.endswith("-latest") and is_runner_label(lab):
+                            findings.append(("HIGH", i, "FLOATING_LABEL",
+                                             floating_label_message(
+                                                 lab, " (referenced in a list, "
+                                                 "e.g. a matrix axis)")))
+                else:
+                    mi = LIST_ITEM_LABEL_RE.match(line)
+                    if mi:
+                        findings.append(("HIGH", i, "FLOATING_LABEL",
+                                         floating_label_message(
+                                             mi.group(1), " (referenced as a "
+                                             "list item, e.g. a matrix axis or "
+                                             "a multi-line runs-on list)")))
             m = USES_RE.search(line)
             if m:
                 ref = m.group(1).strip("'\"")
