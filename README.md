@@ -47,6 +47,10 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 |
 | Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` |
 
+## Machine-readable differences list
+
+The complete 24.04 to 26.04 toolset differences table is available as a CSV in this repository: [`toolset-differences-2404-2604.csv`](toolset-differences-2404-2604.csv) (24 data rows, grouped into the 22 differences figure). It includes the following columns: `category`, `tool`, `change_type`, `ubuntu_2404`, `ubuntu_2604`, `ci_impact`, `mitigation`. As a plain CSV, it can be checked mechanically in a CI job or spreadsheet rather than requiring a human to read a prose changelog. The report generator uses this same file as its source.
+
 ## Migration checklist
 
 Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
