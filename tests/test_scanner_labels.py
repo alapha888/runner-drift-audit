@@ -89,6 +89,54 @@ class FalsePositiveGuardTests(unittest.TestCase):
         self.assertEqual(len(findings), 1)
 
 
+def indirect(findings):
+    return [f for f in findings if f[2] == "INDIRECT_RUNS_ON"]
+
+
+class IndirectLabelTests(unittest.TestCase):
+    def test_env_fed_floating_label_flagged_at_assignment(self):
+        findings = audit(
+            "env:\n  MY_RUNNER: ubuntu-latest\n"
+            "jobs:\n  t:\n    runs-on: ${{ env.MY_RUNNER }}\n")
+        fl = floating(findings)
+        self.assertEqual(len(fl), 1)
+        self.assertIn("MY_RUNNER", fl[0][3])
+        # The assignment is resolved in-file, so no indirect warning.
+        self.assertEqual(indirect(findings), [])
+
+    def test_env_fed_pinned_label_not_flagged(self):
+        findings = audit(
+            "env:\n  MY_RUNNER: ubuntu-24.04\n"
+            "jobs:\n  t:\n    runs-on: ${{ env.MY_RUNNER }}\n")
+        self.assertEqual(floating(findings), [])
+        self.assertEqual(indirect(findings), [])
+
+    def test_vars_fed_label_warns_indirect(self):
+        findings = audit(
+            "jobs:\n  t:\n    runs-on: ${{ vars.RUNNER_LABEL }}\n")
+        self.assertEqual(floating(findings), [])
+        self.assertEqual(len(indirect(findings)), 1)
+
+    def test_inputs_fed_label_warns_indirect(self):
+        findings = audit(
+            "jobs:\n  t:\n    runs-on: ${{ inputs.runner }}\n")
+        self.assertEqual(len(indirect(findings)), 1)
+
+    def test_unreferenced_runner_key_not_flagged(self):
+        findings = audit(
+            "env:\n  REPORT_RUNNER_BASELINE: ubuntu-latest\n"
+            "jobs:\n  t:\n    runs-on: ubuntu-24.04\n")
+        self.assertEqual(floating(findings), [])
+
+    def test_compound_pinned_expression_not_flagged(self):
+        findings = audit(
+            "jobs:\n  t:\n"
+            "    runs-on: ${{ inputs.arch == 'arm' && 'ubuntu-22.04'"
+            " || 'ubuntu-24.04' }}\n")
+        self.assertEqual(floating(findings), [])
+        self.assertEqual(indirect(findings), [])
+
+
 class MessageWordingTests(unittest.TestCase):
     def test_ubuntu_message_names_the_migration(self):
         findings = floating(audit(

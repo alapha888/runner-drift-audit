@@ -79,3 +79,24 @@ all of them now seen, all of them dispositioned.
 A checklist that only reports green runs is marketing; the bends are the
 data. This one bent in two places, on my own files, a week before the
 window opens — which is what the pre-cutover run is for.
+
+## Addendum (same day, evening) — the indirection class
+
+A reader's follow-up on the write-up named the general class the matrix
+fix belongs to: the scanner reads one line, while the migration flows
+through indirection. Matrix was the first hop. The same class covers
+labels fed by `env:` / `vars:` / `inputs:` expressions, and the targets
+of composite actions and reusable workflows.
+
+Fixed in v0.3.2, narrowly: a floating label assigned to a `*RUNNER*` key
+and referenced as `${{ env.<key> }}` in the same file is flagged at the
+assignment; a `runs-on:` fed by a single `${{ vars.* }}`,
+`${{ inputs.* }}`, or in-file-unresolved `${{ env.* }}` expression gets
+an `INDIRECT_RUNS_ON` warning (no verdict the scanner cannot support).
+Compound expressions are not matched — they can pin every branch in the
+same line. Composite-action and reusable-workflow targets are **not**
+followed; that limit is now stated in the README instead of left
+implicit. Six regression tests cover the new shapes and the guards
+(unreferenced `*RUNNER*` keys, pinned env labels, pinned compound
+expressions). My own inventory above contains no env/vars/inputs-fed
+labels — checked on 2026-10-13, inert.

@@ -28,7 +28,7 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.1
+- uses: alapha888/runner-drift-audit@v0.3.2
   with:
     path: "."              # directory that contains .github/workflows
     fail-on-high: "true"   # set to "false" to report findings without failing
@@ -74,6 +74,7 @@ Treat the checklist and the differences list as a filter, not a list to shorten:
 
 - This is a line scanner with shell-aware heuristics (quotes, `sudo`/`env`/`VAR=val` prefixes, multi-line `run:` blocks), not a full YAML/shell parser. Treat findings as a review checklist, not a proof.
 - It checks invocations in `run:` steps and runner labels in `runs-on:` (including labels referenced from a matrix axis or another list in the same file); it does not execute anything and does not phone home.
+- Indirection is followed one level, and only where it is visible in the same file: a floating label assigned to a `*RUNNER*` key and referenced as `${{ env.<key> }}` is flagged at the assignment, and a `runs-on:` fed by a single `${{ vars.* }}` / `${{ inputs.* }}` / unresolved `${{ env.* }}` expression gets an `INDIRECT_RUNS_ON` warning instead of a verdict. It does not follow labels into composite actions or reusable workflows that live in other files or repositories — scan those targets separately; their `runs-on:` lines are outside the files this run reads.
 
 ## Paid option — Pro edition (on sale)
 

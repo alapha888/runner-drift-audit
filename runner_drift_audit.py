@@ -88,6 +88,18 @@ LIST_ITEM_LABEL_RE = re.compile(
     r"^\s*-\s*['\"]?((?:ubuntu|windows|macos)-[A-Za-z0-9._-]*latest)"
     r"['\"]?\s*(#.*)?$")
 RUNNER_PREFIXES = ("ubuntu-", "windows-", "macos-")
+# A `runs-on:` value that is exactly one env/vars/inputs expression, e.g.
+# `runs-on: ${{ env.RUNNER_LABEL }}`. The label then lives wherever that
+# variable is set, which may be outside this file. Deliberately narrow:
+# compound expressions (ternaries, fromJSON, function calls) are not
+# matched, because they can pin every branch in the same line.
+SINGLE_EXPR_RE = re.compile(
+    r"^['\"]?\$\{\{\s*(env|vars|inputs)\.([\w-]+)\s*\}\}['\"]?$")
+# A plain scalar assignment of a runner label to a named key, e.g.
+# `RUNNER_LABEL: ubuntu-latest` under an `env:` block.
+ASSIGN_LABEL_RE = re.compile(
+    r"^\s*-?\s*([\w.-]+):\s*['\"]?((?:ubuntu|windows|macos)-[A-Za-z0-9._-]*)"
+    r"['\"]?\s*(#.*)?$")
 
 
 def is_runner_label(lab):
@@ -141,6 +153,29 @@ def audit_file(path):
         lines = fh.read().splitlines()
     text = "\n".join(lines)
     matrix_keys = set(re.findall(r"matrix\.([\w-]+)", text))
+    # Names referenced through an expression context (env.X / vars.X /
+    # inputs.X) anywhere in the file, and plain scalar assignments, used
+    # to follow one level of label indirection (see SINGLE_EXPR_RE).
+    expr_refs = set(re.findall(r"(?:env|vars|inputs)\.([\w-]+)", text))
+    assignments = {}
+    for raw in lines:
+        ma = ASSIGN_LABEL_RE.match(raw.split("#")[0])
+        if ma:
+            assignments[ma.group(1)] = ma.group(2)
+    # A floating label assigned to a *RUNNER*-named key that the file
+    # actually references through an expression is a real label, one hop
+    # away from the `runs-on:` line. Unreferenced *RUNNER* keys (report
+    # baselines, test fixtures) are not flagged.
+    for idx, raw in enumerate(lines, 1):
+        ma = ASSIGN_LABEL_RE.match(raw.split("#")[0])
+        if (ma and ma.group(2).endswith("-latest")
+                and "runner" in ma.group(1).lower()
+                and ma.group(1) in expr_refs):
+            findings.append(("HIGH", idx, "FLOATING_LABEL",
+                             floating_label_message(
+                                 ma.group(2),
+                                 f" (assigned to '{ma.group(1)}' and "
+                                 "referenced through an expression)")))
     on_ubuntu = bool(re.search(r"ubuntu-(latest|24\.04|26\.04)", text))
     setup_present = {k: (v and v in text) for k, v in SETUP_FOR.items()}
     seen_drift = set()
@@ -169,11 +204,25 @@ def audit_file(path):
         if not is_run_line:
             m = RUNSON_RE.search(line)
             if m:
-                labels = [t.strip(" '\"[],") for t in m.group(1).split(",")]
-                for lab in labels:
-                    if lab.endswith("-latest"):
-                        findings.append(("HIGH", i, "FLOATING_LABEL",
-                                         floating_label_message(lab)))
+                me = SINGLE_EXPR_RE.match(m.group(1).split("#")[0].strip())
+                if me:
+                    kind, name = me.group(1), me.group(2)
+                    if not (kind == "env" and name in assignments):
+                        findings.append(
+                            ("WARN", i, "INDIRECT_RUNS_ON",
+                             f"runner label is fed by the expression "
+                             f"'${{{{ {kind}.{name} }}}}' and this scanner "
+                             "cannot resolve it; check where that value is "
+                             "set (env defaults in this file, repository "
+                             "variables, or caller inputs) and pin it there "
+                             "if it floats."))
+                else:
+                    labels = [t.strip(" '\"[],")
+                              for t in m.group(1).split(",")]
+                    for lab in labels:
+                        if lab.endswith("-latest"):
+                            findings.append(("HIGH", i, "FLOATING_LABEL",
+                                             floating_label_message(lab)))
             else:
                 mb = LIST_KEY_RE.match(line)
                 if mb and (mb.group(1) == "os"
