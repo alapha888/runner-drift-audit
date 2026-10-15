@@ -1,6 +1,7 @@
 # RunnerDriftAudit — Product Hunt 发布日操作清单（照着做版）
 
-> 你只需要照着本清单在自己的电脑上操作。文案、图全部在同目录备好（`copy-final.md` + 3 张 gallery 图 + `thumbnail-512.png`），每一步贴哪段都写明了。Muse 的浏览器过不了 PH 人机验证，所以提交动作由你完成；发布后的跟进（评论回复口径、数据回收）由 Muse 接手。
+> 提交分工（2026-10-13 21:40 更新）：文案已合并为唯一现行版 `copy-final-v2-20261013.md`（下文凡引用 copy-final.md 的段落，一律改贴 v2 文件的对应节）。10 月 17 日晚 Muse 先用已登录的浏览器会话自行尝试提交并排期到 Oct 18（阿发 2026-10-13 点火授权口径：发布动作默认 Muse 自行决策执行）；只有在 PH 人机验证或登录确实卡住时，才按本清单由阿发在自己电脑上手动完成提交。发布后的跟进（评论回复口径、数据回收）由 Muse 接手。
+> 2026-10-14 04:40 自主轮提前试提交实测：worker 侧浏览器会话没有 PH 登录态（任务仅打开首页即停滞交回，未做任何提交动作、无草稿产生），该路已关闭、不再重试；10-17 提交只能走主会话的已登录浏览器，会话失效时按第五节 Plan B/C 顺延，不要在 worker 轮里再派 PH 提交任务。画廊图与缩略图已复核为有效 PNG（512×512 / 1270×760×3）；发布日两条回复模板已经 antigravity 复核无拉票风险。
 
 ## 一、先定时间（结论先行）
 
@@ -13,7 +14,7 @@
 
 ## 二、发布前准备（10 月 17 日白天，约 5 分钟）
 
-1. 打开本文件夹 `ph-launch-kit/`，确认有：`copy-final.md`、`gallery-1-terminal.png`、`gallery-2-differences.png`、`gallery-3-timeline.png`、`thumbnail-512.png`。
+1. 打开本文件夹 `ph-launch-kit/`，确认有：`copy-final-v2-20261013.md`（文案唯一现行版）、`gallery-1-terminal.png`、`gallery-2-differences.png`、`gallery-3-timeline.png`、`thumbnail-512.png`。
 2. 在自己电脑的浏览器打开 producthunt.com，确认右上角显示已登录（就是 10 月 10 日用 Google 授权注册的那个账号，头像在即已登录）。
 3. 若站点提示先完善个人资料：bio 填一句即可——`Indie maker building small developer tools.`；能跳过就跳过，不影响发产品。
 
@@ -22,8 +23,8 @@
 1. 点右上角 **Submit** → 选 **Product / New product**。
 2. 链接框粘贴：`https://github.com/alapha888/runner-drift-audit`，点继续（站点会自动抓取仓库信息）。
 3. **Name**：确认是 `RunnerDriftAudit`，不对就手动改成这个。
-4. **Tagline**：打开 `copy-final.md` 第 2 节，粘贴「主选」那一整行（不要自己加句号或改词）。
-5. **Description**：粘贴 `copy-final.md` 第 3 节的全部四段。
+4. **Tagline**：打开 `copy-final-v2-20261013.md` 第 2 节，粘贴「主选」那一整行（不要自己加句号或改词）。
+5. **Description**：粘贴 `copy-final-v2-20261013.md` 第 3 节的全部四段。
 6. **Website / Link**：确认是第 2 步那个 GitHub 地址。
 7. **Thumbnail**：上传 `thumbnail-512.png`（不要传仓里的 SVG，PH 不收）。
 8. **Gallery**：按顺序上传 `gallery-1-terminal.png`、`gallery-2-differences.png`、`gallery-3-timeline.png`。
@@ -35,7 +36,7 @@
 
 ## 四、发布后第一小时动作（北京时间 10/18 15:01–16:01；不方便守点的话当晚补做，但首评越早贴越好）
 
-1. **贴首评**：打开产品页评论区，粘贴 `copy-final.md` 第 5 节的 Maker 首评全文。这是固定动作，不要改写。
+1. **贴首评**：打开产品页评论区，粘贴 `copy-final-v2-20261013.md` 第 5 节的 Maker 首评全文（末段已含 Pro $29 补充与 Gumroad 链接）。这是固定动作，不要改写。
 2. **回评论**：有人评论就回，原则是感谢＋一句实质回应，不求票。可直接套用的两条：
    - `Thanks! The rules come from diffing GitHub's two official toolset JSONs — happy to add a check if your stack hits something I missed.`
    - `Good question — it's a line scanner with heuristics, not a full parser, so treat the findings as a review checklist. The README has the details.`
