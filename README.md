@@ -28,7 +28,7 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.2
+- uses: alapha888/runner-drift-audit@v0.3.3
   with:
     path: "."              # directory that contains .github/workflows
     fail-on-high: "true"   # set to "false" to report findings without failing

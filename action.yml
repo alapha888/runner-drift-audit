@@ -1,5 +1,5 @@
 name: "Runner Drift Audit"
-description: "Scan GitHub Actions workflows for floating runner labels, unpinned action refs, and tool drift ahead of the ubuntu-latest 24.04 to 26.04 migration."
+description: "Scan workflows for floating runner labels, unpinned action refs, and tool drift ahead of the Ubuntu 26.04 migration."
 author: "alapha888"
 branding:
   icon: "alert-triangle"
