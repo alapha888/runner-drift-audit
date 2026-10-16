@@ -81,3 +81,7 @@ Treat the checklist and the differences list as a filter, not a list to shorten:
 The multi-repo edition is on sale: **RunnerDriftAudit Pro** scans every repository in a local workspace in one run and writes one combined HTML report (cross-repo summary table, per-repo findings with file and line, and a fix checklist per repo). **$29 one-time** on Gumroad: https://alapha888.gumroad.com/l/mepra
 
 The audit rules and findings are identical to this free edition — Pro is the fleet-wide run and the single combined document.
+
+## More from the same author
+
+- Full index of free tools, paid tiers, and waitlists: https://gist.github.com/alapha888/fe51434e80dbc0ef5610aeab38b025f4
