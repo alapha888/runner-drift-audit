@@ -2,6 +2,7 @@
 
 > 合并来源：copy-final.md（基础稿）＋ copy-update-20261013.md（A/B 版增补）。本文件自包含，10-17 提交时只用这一份，另两份仅存档。
 > 10-13 当日变化已全部并入：①付费版 RunnerDriftAudit Pro 已开售（2026-10-13 发布，$29 一次性，https://alapha888.gumroad.com/l/mepra ），B 版段落由「条件追加」改为无条件并入 Maker 首评末尾；②扫描器已升 v0.3.2——Description 第三段首句按实测更新：覆盖经 matrix 轴供给的浮动标签，以及经被实际引用的 env 键赋值的浮动标签（antigravity 复核提醒：不写成泛化的「表达式解析」，vars/inputs 供给仅报 INDIRECT 警告，文案据此收窄）；③samples/bad 实测输出与 v0.3.2 一致（3 HIGH＋3 WARN、clean 0 HIGH），画廊图无需重做。
+> 2026-10-16 补记：扫描器已发 v0.3.3（仅 action.yml 描述 147→116 字符以过 Marketplace 表单 <125 校验＋新增元数据测试，扫描逻辑未变）；粘贴正文不含版本号、无需改动。2026-10-16 本地以 v0.3.3 复跑 samples：bad 仍 3 HIGH＋3 WARN、clean 仍 0 HIGH，全套 28 测试全绿——画廊图与正文数字继续成立。
 
 ## 1. 产品名（Name）
 
