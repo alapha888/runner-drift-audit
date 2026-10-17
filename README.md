@@ -28,7 +28,7 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.5
+- uses: alapha888/runner-drift-audit@v0.3.6
   with:
     path: "."              # directory that contains .github/workflows
     fail-on-high: "true"   # set to "false" to report findings without failing
@@ -42,7 +42,7 @@ Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findin
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.5
+- uses: alapha888/runner-drift-audit@v0.3.6
   with:
     path: "."
     fail-on-high: "false"   # let the upload step run even with HIGH findings
@@ -74,6 +74,10 @@ Add `--json FILE` (CLI) or the `json-file` input (Action) to also write findings
 ```
 
 Every scanned file is listed, including clean ones (empty `findings`), so "scanned and clean" is distinguishable from "not scanned". Paths are repo-relative, matching the SARIF export. The exit code is unchanged: 1 when any HIGH finding exists, else 0.
+
+## See findings on the job summary page
+
+The Action appends a Markdown summary of the findings to the GitHub job summary page by default — counts plus a per-file table — so reviewers see the drift report without opening the logs. Set the `step-summary` input to `"false"` to disable it. With the CLI, write the same Markdown to any file with `--summary-file FILE` (point it at `$GITHUB_STEP_SUMMARY` in a hand-written workflow step to get the same page).
 
 ## What it checks
 

@@ -17,7 +17,7 @@ Rules are grounded in the official actions/runner-images toolsets
   - Go default 1.24 -> 1.26
 
 Usage: python3 runner_drift_audit.py [path-to-repo-or-workflows-dir]
-           [--sarif FILE] [--json FILE]
+           [--sarif FILE] [--json FILE] [--summary-file FILE]
 Exit code: 1 if any HIGH finding, else 0. Stdlib only.
 
 With --sarif FILE, findings are also written as SARIF 2.1.0 JSON, so
@@ -29,6 +29,12 @@ JSON (schema_version 1): a summary with HIGH/WARN counts plus, for
 every scanned file, its findings with severity, line, rule and
 message. Use it to feed dashboards, PR comments or your own gates
 without scraping the text report. Exit code is unchanged.
+
+With --summary-file FILE, findings are also written as a Markdown
+summary (counts plus a per-file findings table). Point it at
+$GITHUB_STEP_SUMMARY inside GitHub Actions to see the results on the
+job summary page without opening the logs; the Action does this
+automatically unless its step-summary input is set to "false".
 """
 import json
 import os
@@ -404,10 +410,54 @@ def build_json_report(per_file, root):
     }
 
 
+def build_markdown_summary(per_file, root):
+    """Build the Markdown job summary from [(path, findings), ...].
+
+    Same relative-path and clean-file conventions as the JSON export:
+    every scanned file appears, so "scanned and clean" is visible.
+    Messages are escaped for the table cell they land in.
+    """
+    rep = build_json_report(per_file, root)
+    s = rep["summary"]
+    lines = [
+        "## Runner Drift Audit",
+        "",
+        f"Scanned {s['files_scanned']} workflow file(s): "
+        f"**{s['high']} HIGH**, **{s['warn']} WARN** "
+        f"({s['findings']} finding(s) total).",
+        "",
+    ]
+    if not per_file:
+        lines.append("No workflow files were found to scan.")
+        lines.append("")
+        return "\n".join(lines)
+    for entry in rep["files"]:
+        lines.append(f"### `{entry['path']}`")
+        lines.append("")
+        if not entry["findings"]:
+            lines.append("No findings.")
+            lines.append("")
+            continue
+        lines.append("| Severity | Line | Rule | Finding |")
+        lines.append("| --- | ---: | --- | --- |")
+        for f in entry["findings"]:
+            msg = f["message"].replace("|", "\\|").replace("\n", " ")
+            lines.append(
+                f"| {f['severity']} | {f['line']} | {f['rule']} | {msg} |")
+        lines.append("")
+    lines.append(
+        "Rule sources: actions/runner-images toolset-2404.json vs "
+        "toolset-2604.json (ubuntu-latest moves 24.04 -> 26.04, "
+        "Oct 19 - Nov 19, 2026).")
+    lines.append("")
+    return "\n".join(lines)
+
+
 def parse_args(argv):
     root = "."
     sarif_path = None
     json_path = None
+    summary_path = None
     args = list(argv[1:])
     i = 0
     while i < len(args):
@@ -428,16 +478,24 @@ def parse_args(argv):
         elif a.startswith("--json="):
             json_path = a.split("=", 1)[1]
             i += 1
+        elif a == "--summary-file":
+            if i + 1 >= len(args):
+                raise SystemExit("--summary-file requires a file path argument")
+            summary_path = args[i + 1]
+            i += 2
+        elif a.startswith("--summary-file="):
+            summary_path = a.split("=", 1)[1]
+            i += 1
         elif a.startswith("--"):
             raise SystemExit(f"unknown option: {a}")
         else:
             root = a
             i += 1
-    return root, sarif_path, json_path
+    return root, sarif_path, json_path, summary_path
 
 
 def main(argv):
-    root, sarif_path, json_path = parse_args(argv)
+    root, sarif_path, json_path, summary_path = parse_args(argv)
     files = find_workflows(root)
     if not files:
         print(f"No workflow files found under {root} (.github/workflows or *.yml/*.yaml).")
@@ -449,6 +507,9 @@ def main(argv):
             with open(json_path, "w", encoding="utf-8") as fh:
                 json.dump(build_json_report([], root), fh, indent=2)
                 fh.write("\n")
+        if summary_path:
+            with open(summary_path, "w", encoding="utf-8") as fh:
+                fh.write(build_markdown_summary([], root))
         return 0
     total_high = 0
     per_file = []
@@ -475,6 +536,10 @@ def main(argv):
             json.dump(build_json_report(per_file, root), fh, indent=2)
             fh.write("\n")
         print(f"JSON report written to {json_path}.")
+    if summary_path:
+        with open(summary_path, "w", encoding="utf-8") as fh:
+            fh.write(build_markdown_summary(per_file, root))
+        print(f"Markdown summary written to {summary_path}.")
     return 1 if total_high else 0
 
 

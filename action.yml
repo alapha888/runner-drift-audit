@@ -21,6 +21,10 @@ inputs:
     description: "Also write findings as plain machine-readable JSON (schema v1: summary counts plus per-file findings) to this path. Empty disables it."
     required: false
     default: ""
+  step-summary:
+    description: "Append a Markdown summary of the findings to the GitHub job summary page. Set to 'false' to disable."
+    required: false
+    default: "true"
 runs:
   using: "composite"
   steps:
@@ -31,10 +35,15 @@ runs:
         FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
         SARIF_FILE: ${{ inputs.sarif-file }}
         JSON_FILE: ${{ inputs.json-file }}
+        STEP_SUMMARY: ${{ inputs.step-summary }}
       run: |
         case "$FAIL_ON_HIGH" in
           true|false) ;;
           *) echo "::error::fail-on-high must be 'true' or 'false', got '$FAIL_ON_HIGH'"; exit 2 ;;
+        esac
+        case "$STEP_SUMMARY" in
+          true|false) ;;
+          *) echo "::error::step-summary must be 'true' or 'false', got '$STEP_SUMMARY'"; exit 2 ;;
         esac
         set +e
         out="$(mktemp)"
@@ -46,8 +55,17 @@ runs:
         if [ -n "$JSON_FILE" ]; then
           json_args=(--json "$JSON_FILE")
         fi
-        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" "${sarif_args[@]}" "${json_args[@]}" | tee "$out"
+        summary_args=()
+        summary_file=""
+        if [ "$STEP_SUMMARY" = "true" ]; then
+          summary_file="$(mktemp)"
+          summary_args=(--summary-file "$summary_file")
+        fi
+        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" "${sarif_args[@]}" "${json_args[@]}" "${summary_args[@]}" | tee "$out"
         code=${PIPESTATUS[0]}
+        if [ -n "$summary_file" ] && [ -s "$summary_file" ] && [ -n "$GITHUB_STEP_SUMMARY" ]; then
+          cat "$summary_file" >> "$GITHUB_STEP_SUMMARY"
+        fi
         if [ "$code" -eq 0 ]; then
           exit 0
         fi
