@@ -13,6 +13,10 @@ inputs:
     description: "Fail the step when any HIGH finding exists. Set to 'false' to report only."
     required: false
     default: "true"
+  sarif-file:
+    description: "Also write findings as SARIF 2.1.0 JSON to this path (for GitHub Code Scanning upload). Empty disables it."
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -21,6 +25,7 @@ runs:
       env:
         SCAN_PATH: ${{ inputs.path }}
         FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
+        SARIF_FILE: ${{ inputs.sarif-file }}
       run: |
         case "$FAIL_ON_HIGH" in
           true|false) ;;
@@ -28,7 +33,11 @@ runs:
         esac
         set +e
         out="$(mktemp)"
-        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" | tee "$out"
+        sarif_args=()
+        if [ -n "$SARIF_FILE" ]; then
+          sarif_args=(--sarif "$SARIF_FILE")
+        fi
+        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" "${sarif_args[@]}" | tee "$out"
         code=${PIPESTATUS[0]}
         if [ "$code" -eq 0 ]; then
           exit 0

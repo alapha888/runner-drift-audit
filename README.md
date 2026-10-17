@@ -36,6 +36,25 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 `fail-on-high: "true"` (the default) exits 1 when any HIGH finding exists; `"false"` prints the same report and always passes. No Marketplace listing is required to use the `uses:` form above.
 
+## Export SARIF for GitHub Code Scanning
+
+Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findings as SARIF 2.1.0 JSON — HIGH findings become `error`, WARN findings become `warning`, with repo-relative file paths and line numbers. Upload it with the CodeQL upload action and the findings appear in the repository's Security tab as code-scanning alerts:
+
+```yaml
+- uses: actions/checkout@v4
+- uses: alapha888/runner-drift-audit@v0.3.3
+  with:
+    path: "."
+    fail-on-high: "false"   # let the upload step run even with HIGH findings
+    sarif-file: "runner-drift.sarif"
+- uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: "runner-drift.sarif"
+    category: "runner-drift-audit"
+```
+
+The same flag works without the Action: `python3 runner_drift_audit.py . --sarif runner-drift.sarif`.
+
 ## What it checks
 
 Rules are grounded in a diff of the official `actions/runner-images` toolsets (`toolset-2404.json` vs `toolset-2604.json`, compared 2026-10-10 — 22 differences):

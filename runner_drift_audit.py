@@ -17,8 +17,14 @@ Rules are grounded in the official actions/runner-images toolsets
   - Go default 1.24 -> 1.26
 
 Usage: python3 runner_drift_audit.py [path-to-repo-or-workflows-dir]
+           [--sarif FILE]
 Exit code: 1 if any HIGH finding, else 0. Stdlib only.
+
+With --sarif FILE, findings are also written as SARIF 2.1.0 JSON, so
+they can be uploaded to GitHub Code Scanning (for example with
+github/codeql-action/upload-sarif) and appear in the Security tab.
 """
+import json
 import os
 import re
 import sys
@@ -265,15 +271,125 @@ def audit_file(path):
     return findings
 
 
+SARIF_RULES = {
+    "FLOATING_LABEL": (
+        "Floating runner label",
+        "A runs-on label such as ubuntu-latest moves to a new runner "
+        "image on the provider's schedule; pin a versioned label."),
+    "INDIRECT_RUNS_ON": (
+        "Runner label supplied indirectly",
+        "A runs-on value fed by an env/vars/inputs expression cannot be "
+        "resolved by this scanner; check and pin it where it is set."),
+    "UNPINNED_ACTION": (
+        "Action referenced by a mutable tag",
+        "An action referenced by a tag instead of a full commit SHA can "
+        "move under you; pin to a full SHA where policy requires it."),
+    "REMOVED_TOOL": (
+        "Removed tool invoked",
+        "A run step invokes a tool that was removed from the Ubuntu "
+        "26.04 runner image."),
+    "DEFAULT_DRIFT": (
+        "Default tool version drift",
+        "A tool's default version changes in the Ubuntu 26.04 runner "
+        "image and no setup action pins it."),
+}
+
+SARIF_LEVEL = {"HIGH": "error", "WARN": "warning"}
+
+
+def build_sarif(per_file, root):
+    """Build a SARIF 2.1.0 log (as a dict) from [(path, findings), ...].
+
+    Artifact URIs are made relative to the scanned root when the file
+    lives under it, so Code Scanning can map results back to the repo.
+    """
+    rules = []
+    for rule_id, (short, full) in SARIF_RULES.items():
+        rules.append({
+            "id": rule_id,
+            "name": rule_id,
+            "shortDescription": {"text": short},
+            "fullDescription": {"text": full},
+            "defaultConfiguration": {
+                "level": "error" if rule_id in (
+                    "FLOATING_LABEL", "REMOVED_TOOL") else "warning",
+            },
+        })
+    results = []
+    for path, findings in per_file:
+        uri = path
+        try:
+            rel = os.path.relpath(path, root)
+            if not rel.startswith(".."):
+                uri = rel
+        except ValueError:
+            pass
+        uri = uri.replace(os.sep, "/")
+        for sev, ln, rule, msg in findings:
+            results.append({
+                "ruleId": rule,
+                "level": SARIF_LEVEL.get(sev, "warning"),
+                "message": {"text": msg},
+                "locations": [{
+                    "physicalLocation": {
+                        "artifactLocation": {"uri": uri},
+                        "region": {"startLine": ln},
+                    },
+                }],
+            })
+    return {
+        "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
+        "version": "2.1.0",
+        "runs": [{
+            "tool": {"driver": {
+                "name": "RunnerDriftAudit",
+                "informationUri":
+                    "https://github.com/alapha888/runner-drift-audit",
+                "rules": rules,
+            }},
+            "results": results,
+        }],
+    }
+
+
+def parse_args(argv):
+    root = "."
+    sarif_path = None
+    args = list(argv[1:])
+    i = 0
+    while i < len(args):
+        a = args[i]
+        if a == "--sarif":
+            if i + 1 >= len(args):
+                raise SystemExit("--sarif requires a file path argument")
+            sarif_path = args[i + 1]
+            i += 2
+        elif a.startswith("--sarif="):
+            sarif_path = a.split("=", 1)[1]
+            i += 1
+        elif a.startswith("--"):
+            raise SystemExit(f"unknown option: {a}")
+        else:
+            root = a
+            i += 1
+    return root, sarif_path
+
+
 def main(argv):
-    root = argv[1] if len(argv) > 1 else "."
+    root, sarif_path = parse_args(argv)
     files = find_workflows(root)
     if not files:
         print(f"No workflow files found under {root} (.github/workflows or *.yml/*.yaml).")
+        if sarif_path:
+            with open(sarif_path, "w", encoding="utf-8") as fh:
+                json.dump(build_sarif([], root), fh, indent=2)
+                fh.write("\n")
         return 0
     total_high = 0
+    per_file = []
     for path in files:
         findings = audit_file(path)
+        per_file.append((path, findings))
         if not findings:
             print(f"OK      {path}")
             continue
@@ -284,6 +400,11 @@ def main(argv):
             print(f"  [{sev}] line {ln} {rule}: {msg}")
     print(f"\nScanned {len(files)} workflow file(s); HIGH findings: {total_high}.")
     print("Rule sources: actions/runner-images toolset-2404.json vs toolset-2604.json.")
+    if sarif_path:
+        with open(sarif_path, "w", encoding="utf-8") as fh:
+            json.dump(build_sarif(per_file, root), fh, indent=2)
+            fh.write("\n")
+        print(f"SARIF report written to {sarif_path}.")
     return 1 if total_high else 0
 
 
