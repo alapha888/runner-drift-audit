@@ -28,7 +28,7 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.4
+- uses: alapha888/runner-drift-audit@v0.3.5
   with:
     path: "."              # directory that contains .github/workflows
     fail-on-high: "true"   # set to "false" to report findings without failing
@@ -42,7 +42,7 @@ Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findin
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.4
+- uses: alapha888/runner-drift-audit@v0.3.5
   with:
     path: "."
     fail-on-high: "false"   # let the upload step run even with HIGH findings
@@ -56,6 +56,24 @@ Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findin
 The same flag works without the Action: `python3 runner_drift_audit.py . --sarif runner-drift.sarif`.
 
 Full guide — the five rule IDs, severity mapping, and the two workflow details that decide whether alerts actually reach the Security tab: [docs/sarif-code-scanning.md](docs/sarif-code-scanning.md).
+
+## Export plain JSON for your own tooling
+
+Add `--json FILE` (CLI) or the `json-file` input (Action) to also write findings as plain JSON (schema v1), for consumers that do not speak SARIF — a dashboard, a PR comment, or your own gate script — without scraping the text report:
+
+```json
+{
+  "tool": "RunnerDriftAudit",
+  "schema_version": 1,
+  "summary": {"files_scanned": 1, "high": 3, "warn": 3, "findings": 6},
+  "files": [
+    {"path": ".github/workflows/ci.yml",
+     "findings": [{"severity": "HIGH", "line": 5, "rule": "FLOATING_LABEL", "message": "…"}]}
+  ]
+}
+```
+
+Every scanned file is listed, including clean ones (empty `findings`), so "scanned and clean" is distinguishable from "not scanned". Paths are repo-relative, matching the SARIF export. The exit code is unchanged: 1 when any HIGH finding exists, else 0.
 
 ## What it checks
 

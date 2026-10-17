@@ -17,12 +17,18 @@ Rules are grounded in the official actions/runner-images toolsets
   - Go default 1.24 -> 1.26
 
 Usage: python3 runner_drift_audit.py [path-to-repo-or-workflows-dir]
-           [--sarif FILE]
+           [--sarif FILE] [--json FILE]
 Exit code: 1 if any HIGH finding, else 0. Stdlib only.
 
 With --sarif FILE, findings are also written as SARIF 2.1.0 JSON, so
 they can be uploaded to GitHub Code Scanning (for example with
 github/codeql-action/upload-sarif) and appear in the Security tab.
+
+With --json FILE, findings are also written as plain machine-readable
+JSON (schema_version 1): a summary with HIGH/WARN counts plus, for
+every scanned file, its findings with severity, line, rule and
+message. Use it to feed dashboards, PR comments or your own gates
+without scraping the text report. Exit code is unchanged.
 """
 import json
 import os
@@ -352,9 +358,56 @@ def build_sarif(per_file, root):
     }
 
 
+def build_json_report(per_file, root):
+    """Build the plain-JSON report (as a dict) from [(path, findings), ...].
+
+    Paths are made relative to the scanned root when the file lives
+    under it, matching the SARIF export. Every scanned file is listed,
+    including files with no findings, so consumers can distinguish
+    "scanned and clean" from "not scanned".
+    """
+    files = []
+    total_high = 0
+    total_warn = 0
+    for path, findings in per_file:
+        rel = path
+        try:
+            cand = os.path.relpath(path, root)
+            if not cand.startswith(".."):
+                rel = cand
+        except ValueError:
+            pass
+        rel = rel.replace(os.sep, "/")
+        entries = []
+        for sev, ln, rule, msg in findings:
+            if sev == "HIGH":
+                total_high += 1
+            elif sev == "WARN":
+                total_warn += 1
+            entries.append({
+                "severity": sev,
+                "line": ln,
+                "rule": rule,
+                "message": msg,
+            })
+        files.append({"path": rel, "findings": entries})
+    return {
+        "tool": "RunnerDriftAudit",
+        "schema_version": 1,
+        "summary": {
+            "files_scanned": len(per_file),
+            "high": total_high,
+            "warn": total_warn,
+            "findings": total_high + total_warn,
+        },
+        "files": files,
+    }
+
+
 def parse_args(argv):
     root = "."
     sarif_path = None
+    json_path = None
     args = list(argv[1:])
     i = 0
     while i < len(args):
@@ -367,22 +420,34 @@ def parse_args(argv):
         elif a.startswith("--sarif="):
             sarif_path = a.split("=", 1)[1]
             i += 1
+        elif a == "--json":
+            if i + 1 >= len(args):
+                raise SystemExit("--json requires a file path argument")
+            json_path = args[i + 1]
+            i += 2
+        elif a.startswith("--json="):
+            json_path = a.split("=", 1)[1]
+            i += 1
         elif a.startswith("--"):
             raise SystemExit(f"unknown option: {a}")
         else:
             root = a
             i += 1
-    return root, sarif_path
+    return root, sarif_path, json_path
 
 
 def main(argv):
-    root, sarif_path = parse_args(argv)
+    root, sarif_path, json_path = parse_args(argv)
     files = find_workflows(root)
     if not files:
         print(f"No workflow files found under {root} (.github/workflows or *.yml/*.yaml).")
         if sarif_path:
             with open(sarif_path, "w", encoding="utf-8") as fh:
                 json.dump(build_sarif([], root), fh, indent=2)
+                fh.write("\n")
+        if json_path:
+            with open(json_path, "w", encoding="utf-8") as fh:
+                json.dump(build_json_report([], root), fh, indent=2)
                 fh.write("\n")
         return 0
     total_high = 0
@@ -405,6 +470,11 @@ def main(argv):
             json.dump(build_sarif(per_file, root), fh, indent=2)
             fh.write("\n")
         print(f"SARIF report written to {sarif_path}.")
+    if json_path:
+        with open(json_path, "w", encoding="utf-8") as fh:
+            json.dump(build_json_report(per_file, root), fh, indent=2)
+            fh.write("\n")
+        print(f"JSON report written to {json_path}.")
     return 1 if total_high else 0
 
 

@@ -17,6 +17,10 @@ inputs:
     description: "Also write findings as SARIF 2.1.0 JSON to this path (for GitHub Code Scanning upload). Empty disables it."
     required: false
     default: ""
+  json-file:
+    description: "Also write findings as plain machine-readable JSON (schema v1: summary counts plus per-file findings) to this path. Empty disables it."
+    required: false
+    default: ""
 runs:
   using: "composite"
   steps:
@@ -26,6 +30,7 @@ runs:
         SCAN_PATH: ${{ inputs.path }}
         FAIL_ON_HIGH: ${{ inputs.fail-on-high }}
         SARIF_FILE: ${{ inputs.sarif-file }}
+        JSON_FILE: ${{ inputs.json-file }}
       run: |
         case "$FAIL_ON_HIGH" in
           true|false) ;;
@@ -37,7 +42,11 @@ runs:
         if [ -n "$SARIF_FILE" ]; then
           sarif_args=(--sarif "$SARIF_FILE")
         fi
-        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" "${sarif_args[@]}" | tee "$out"
+        json_args=()
+        if [ -n "$JSON_FILE" ]; then
+          json_args=(--json "$JSON_FILE")
+        fi
+        python3 "${{ github.action_path }}/runner_drift_audit.py" "$SCAN_PATH" "${sarif_args[@]}" "${json_args[@]}" | tee "$out"
         code=${PIPESTATUS[0]}
         if [ "$code" -eq 0 ]; then
           exit 0
