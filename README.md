@@ -74,6 +74,8 @@ The complete 24.04 to 26.04 toolset differences table is available as a CSV in t
 
 Human-readable version: [Ubuntu 26.04 toolset changes](docs/ubuntu-2604-toolset-changes.md) — every removed tool, global removal, rename, and default-version jump in tables, with what to do for each.
 
+For the rollout window itself (October 19 – November 19, 2026), see the [rollout-week playbook](docs/rollout-week-playbook.md) — what to do when the same workflow can land on either image from one run to the next.
+
 ## Migration checklist
 
 Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
