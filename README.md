@@ -55,6 +55,8 @@ Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findin
 
 The same flag works without the Action: `python3 runner_drift_audit.py . --sarif runner-drift.sarif`.
 
+Full guide — the five rule IDs, severity mapping, and the two workflow details that decide whether alerts actually reach the Security tab: [docs/sarif-code-scanning.md](docs/sarif-code-scanning.md).
+
 ## What it checks
 
 Rules are grounded in a diff of the official `actions/runner-images` toolsets (`toolset-2404.json` vs `toolset-2604.json`, compared 2026-10-10 — 22 differences):
