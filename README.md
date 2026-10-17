@@ -81,6 +81,8 @@ Full guide — the schema v1 fields, the empty-scan behaviour, and what the JSON
 
 The Action appends a Markdown summary of the findings to the GitHub job summary page by default — counts plus a per-file table — so reviewers see the drift report without opening the logs. Set the `step-summary` input to `"false"` to disable it. With the CLI, write the same Markdown to any file with `--summary-file FILE` (point it at `$GITHUB_STEP_SUMMARY` in a hand-written workflow step to get the same page).
 
+Full guide — the summary format, the empty-scan behaviour, and what the job summary does not do: [docs/job-summary.md](docs/job-summary.md).
+
 ## What it checks
 
 Rules are grounded in a diff of the official `actions/runner-images` toolsets (`toolset-2404.json` vs `toolset-2604.json`, compared 2026-10-10 — 22 differences):
