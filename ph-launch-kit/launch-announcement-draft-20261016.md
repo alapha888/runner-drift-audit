@@ -18,9 +18,9 @@ If you try it on your own repos, feedback on what it finds — and what it misse
 
 ## X 版（≤280 字符，链接另计）
 
-RunnerDriftAudit is live on Product Hunt today. Free, open-source scanner that checks your GitHub Actions workflows before `ubuntu-latest` moves from Ubuntu 24.04 to 26.04 on Oct 19. Feedback welcome: <PH_URL>
+RunnerDriftAudit is live on Product Hunt today. Free, open-source scanner that checks your GitHub Actions workflows before `ubuntu-latest` moves from Ubuntu 24.04 to 26.04 — rollout starts Oct 19, through Nov 19. Feedback welcome: <PH_URL>
 
 ## 中文版（自有渠道备用）
 
 RunnerDriftAudit 今天上线 Product Hunt：<PH_URL>
-一个免费开源的单文件 Python 扫描器，在 GitHub 于 10 月 19 日起把 `ubuntu-latest` 从 Ubuntu 24.04 迁往 26.04 之前，逐行检查你的 Actions 工作流会踩到哪些移除工具与默认版本漂移。欢迎试用与反馈。
+一个免费开源的单文件 Python 扫描器，在 GitHub 于 10 月 19 日起至 11 月 19 日把 `ubuntu-latest` 从 Ubuntu 24.04 逐步迁往 26.04 之前，逐行检查你的 Actions 工作流会踩到哪些移除工具与默认版本漂移。欢迎试用与反馈。
