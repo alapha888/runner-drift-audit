@@ -7,8 +7,8 @@ Before writing anything else about it, I ran RunnerDriftAudit v0.3.7 on the five
 | Repo | HIGH | What the HIGH findings were |
 |---|---:|---|
 | photoveil-ios | 1 | `RETIRED_LABEL` — CI still on `macos-14` |
-| cn-ai-coding-workflow-lite | 4 | Floating `ubuntu-latest` / `macos-latest` / `windows-latest` in the install-test matrix, plus `windows-latest` |
-| cn-ai-coding-workflow | 4 | Same matrix pattern as the lite repo |
+| cn-ai-coding-workflow-lite | 4 | Floating `ubuntu-latest` / `macos-latest` / `windows-latest` in the install-test matrix, plus 1 standalone `windows-latest` job |
+| cn-ai-coding-workflow | 4 | Same 4 findings as the lite repo: 3 in the matrix, plus 1 standalone `windows-latest` job |
 | pubaudit-windows | 2 | Floating `windows-latest` in both workflows |
 | runner-drift-audit | 0 | — (2 WARN: `actions/checkout@v4` not pinned to a SHA) |
 
@@ -18,7 +18,7 @@ Total: 11 HIGH, all floating or retired labels. Plus a WARN in almost every file
 
 **Fixed within the hour:** `photoveil-ios` moved from `macos-14` to `macos-15`. That job would have failed on purpose tonight during the brownout window, and would have stopped working entirely on November 2. One line, pushed this morning; CI on macos-15 passed in 32s (core tests and iOS typecheck), run 39146373675 in the photoveil-ios repo history.
 
-**Left floating on purpose, now recorded as checked-and-inert:** the two `cn-ai-coding-workflow` install-test matrices. Their job is to prove an install script works on whatever "latest" currently means on three operating systems — pinning those labels would defeat the test. The `windows-latest` jobs in `pubaudit-windows` are in the same category for now: the product is a Windows desktop build, and there is no announced Windows image migration in this window. These stay floating by decision, not by default — which is the distinction the day guide asks for.
+**Left floating on purpose, now recorded as checked-and-inert:** the two `cn-ai-coding-workflow` install-test matrices. Their job is to prove an install script works on whatever "latest" currently means on three operating systems — pinning those labels would defeat the test. The standalone `windows-latest` jobs in the two `cn-ai-coding-workflow` repos and the `windows-latest` jobs in `pubaudit-windows` are in the same category for now: the product is a Windows desktop build, and there is no announced Windows image migration in this window. These stay floating by decision, not by default — which is the distinction the day guide asks for.
 
 **Not fixed yet, honestly:** the unpinned `actions/checkout@v4` warnings are mine too, including in RunnerDriftAudit's own self-test workflow. Pinning to SHAs is a separate pass; the scanner reports it, and I have not done it yet.
 
