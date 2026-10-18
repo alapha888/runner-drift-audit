@@ -93,7 +93,7 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 | Retired runner label | HIGH | `runs-on: macos-14` (also `macos-14-large` / `macos-14-xlarge`, in any of the same forms) — the macOS 14 image is retired on November 2, 2026, and jobs on it fail during scheduled brownouts before that date (GitHub Changelog, 2026-10-01). A pinned label does not drift; it stops working. Full guide: [docs/macos-14-retirement.md](docs/macos-14-retirement.md) |
 | Removed tool invoked in a run step | HIGH | `hg` (mercurial removed), `mediainfo`, `sphinxsearch`, `haveged`, `fastlane` gem, globally preinstalled `webpack`/`gulp`/`grunt`/`parcel`/`lerna`/`newman`/`tsc` (only `n` and `yarn` remain), `gcc-12`, `clang-16/17`, `p7zip` |
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 |
-| Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` |
+| Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` — remediation guide: [docs/pinning-actions-by-sha.md](docs/pinning-actions-by-sha.md) |
 
 ## Machine-readable differences list
 
@@ -115,7 +115,7 @@ Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
 4. **Pin what drifts.** Where a WARN flags a default version change (Java, Node, PHP, PostgreSQL, Go, clang, CMake, Docker), pin the version explicitly instead of relying on the image default — a setup action for language runtimes, a service or image pin for PostgreSQL and Docker.
 5. **Enumerate container images by tag.** List the images your workflows pull by tag (service containers, `container:` jobs, `docker pull` steps). Their base can move to the new image generation on a schedule you do not control, independently of the runner label — pin by digest or to an explicit tag where the image contents matter. This is a manual pass; the scanner does not inspect image references.
 6. **Check locale and timezone defaults.** If anything in your pipeline diffs or parses log output, timestamps, or sorted text, record the current locale/timezone behaviour and re-check it after the move. Default changes here bite even single-language projects, and they do not show up as version bumps.
-7. **Review action refs.** Mutable tags are flagged as WARN; pin to a full SHA where your policy requires it.
+7. **Review action refs.** Mutable tags are flagged as WARN; pin to a full SHA where your policy requires it — see the [pinning guide](docs/pinning-actions-by-sha.md) for resolving a tag to its SHA, writing the pin with a version comment, and keeping pins fresh with Dependabot.
 8. **Re-run** until no HIGH findings remain, and keep the final report with the migration PR so reviewers can see what was checked.
 
 Treat the checklist and the differences list as a filter, not a list to shorten: for every row that does not apply, write "not installed / not used, checked on <date>" instead of deleting it. Proving most rows inert is the value — an unchecked row and a checked-inert row look identical in a shortened list, and only one of them is evidence.
