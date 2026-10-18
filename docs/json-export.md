@@ -31,8 +31,9 @@ Available since v0.3.5, in both forms of the tool:
   "not scanned". A scan that finds no workflow files still writes a
   valid report, with `files_scanned: 0` and an empty `files` list.
 - Each finding carries `severity` (`HIGH` or `WARN`), a 1-based `line`,
-  one of the five rule IDs (`FLOATING_LABEL`, `REMOVED_TOOL`,
-  `INDIRECT_RUNS_ON`, `UNPINNED_ACTION`, `DEFAULT_DRIFT`), and a
+  one of the six rule IDs (`FLOATING_LABEL`, `RETIRED_LABEL`,
+  `REMOVED_TOOL`, `INDIRECT_RUNS_ON`, `UNPINNED_ACTION`,
+  `DEFAULT_DRIFT`), and a
   human-readable `message`.
 - Paths are repository-relative, matching the SARIF export.
 

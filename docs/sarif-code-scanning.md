@@ -10,7 +10,7 @@ Available since v0.3.4, in both forms of the tool:
 - CLI: `python3 runner_drift_audit.py . --sarif runner-drift.sarif`
 - Action: set the `sarif-file` input (see the workflow below)
 
-## The five rules in the log
+## The six rules in the log
 
 Every result carries one of these rule IDs, with a short and a full
 description embedded in the log itself:
@@ -18,6 +18,7 @@ description embedded in the log itself:
 | Rule ID | Meaning | Default level |
 |---|---|---|
 | `FLOATING_LABEL` | A `runs-on` label such as `ubuntu-latest` moves to a new runner image on the provider's schedule | error |
+| `RETIRED_LABEL` | A pinned `runs-on` label such as `macos-14` belongs to a runner image being retired (macOS 14, November 2, 2026) | error |
 | `REMOVED_TOOL` | A `run:` step invokes a tool removed from the Ubuntu 26.04 runner image | error |
 | `INDIRECT_RUNS_ON` | A `runs-on` value is supplied indirectly (env/vars/inputs) and cannot be resolved by the scanner | warning |
 | `UNPINNED_ACTION` | An action is referenced by a mutable tag instead of a full commit SHA | warning |
@@ -28,7 +29,7 @@ written as `error`, WARN findings as `warning`. Finding locations use
 repository-relative paths and line numbers, so Code Scanning can place
 each alert on the exact workflow line.
 
-An empty scan still writes a valid log: the run lists all five rules and
+An empty scan still writes a valid log: the run lists all six rules and
 zero results. Uploading that log is harmless and closes alerts that a
 later commit has fixed.
 

@@ -31,8 +31,9 @@ Scanned 1 workflow file(s): **3 HIGH**, **3 WARN** (6 finding(s) total).
 
 - Counts split findings into `HIGH` and `WARN`, with the total in
   parentheses. Each finding row carries its severity, a 1-based `line`,
-  one of the five rule IDs (`FLOATING_LABEL`, `REMOVED_TOOL`,
-  `INDIRECT_RUNS_ON`, `UNPINNED_ACTION`, `DEFAULT_DRIFT`), and the same
+  one of the six rule IDs (`FLOATING_LABEL`, `RETIRED_LABEL`,
+  `REMOVED_TOOL`, `INDIRECT_RUNS_ON`, `UNPINNED_ACTION`,
+  `DEFAULT_DRIFT`), and the same
   human-readable message the text report prints.
 - Paths are repository-relative. A `|` inside a finding message is
   escaped as `\|`, so the table stays valid Markdown.

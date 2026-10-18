@@ -55,7 +55,7 @@ Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findin
 
 The same flag works without the Action: `python3 runner_drift_audit.py . --sarif runner-drift.sarif`.
 
-Full guide — the five rule IDs, severity mapping, and the two workflow details that decide whether alerts actually reach the Security tab: [docs/sarif-code-scanning.md](docs/sarif-code-scanning.md).
+Full guide — the six rule IDs, severity mapping, and the two workflow details that decide whether alerts actually reach the Security tab: [docs/sarif-code-scanning.md](docs/sarif-code-scanning.md).
 
 ## Export plain JSON for your own tooling
 
@@ -90,7 +90,7 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 | Rule | Severity | Examples from the official toolset diff |
 |---|---|---|
 | Floating runner label | HIGH | `runs-on: ubuntu-latest` (also quoted / list forms, and labels referenced from a matrix axis or other list) |
-| Retired runner label | HIGH | `runs-on: macos-14` (also `macos-14-large` / `macos-14-xlarge`, in any of the same forms) — the macOS 14 image is retired on November 2, 2026, and jobs on it fail during scheduled brownouts before that date (GitHub Changelog, 2026-10-01). A pinned label does not drift; it stops working. |
+| Retired runner label | HIGH | `runs-on: macos-14` (also `macos-14-large` / `macos-14-xlarge`, in any of the same forms) — the macOS 14 image is retired on November 2, 2026, and jobs on it fail during scheduled brownouts before that date (GitHub Changelog, 2026-10-01). A pinned label does not drift; it stops working. Full guide: [docs/macos-14-retirement.md](docs/macos-14-retirement.md) |
 | Removed tool invoked in a run step | HIGH | `hg` (mercurial removed), `mediainfo`, `sphinxsearch`, `haveged`, `fastlane` gem, globally preinstalled `webpack`/`gulp`/`grunt`/`parcel`/`lerna`/`newman`/`tsc` (only `n` and `yarn` remain), `gcc-12`, `clang-16/17`, `p7zip` |
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 |
 | Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` |
