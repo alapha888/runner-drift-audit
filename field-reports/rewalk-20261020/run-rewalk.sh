@@ -34,7 +34,13 @@ run_one () {
 {
   run_one "cn-ai-coding-workflow" "$HOME/workspace/independent/cn-ai-coding-workflow"
   run_one "cn-ai-coding-workflow-lite" "$HOME/workspace/independent/cn-ai-coding-workflow-lite"
-  run_one "pending-self-test" "$REPO/pending-workflow-scope"
+  # Baseline target 3 was pending-workflow-scope/self-test.yml (unpushed on
+  # Oct 13, token lacked workflow scope). The file has since been pushed as
+  # .github/workflows/self-test.yml (workflow scope granted; commit 662c3bd),
+  # so the pending directory no longer exists. Scanning the repo root finds
+  # exactly that file and reproduces the baseline (0 HIGH / 2 WARN) — verified
+  # on the Oct 19 day-1 snapshot. This is a path move, not a migration delta.
+  run_one "self-test" "$REPO"
 } > "$OUT/scans-all.txt"
 
 echo "Outputs in $OUT : metadata.md, scans-all.txt, scan-*.txt"

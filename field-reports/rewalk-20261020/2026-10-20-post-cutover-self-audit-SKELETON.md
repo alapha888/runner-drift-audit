@@ -21,7 +21,7 @@ platform-switch effects.
 |---|---|---|---|
 | cn-ai-coding-workflow `test-install.yml` | 4 | 2 | matrix `os:` axis: ubuntu-latest / macos-latest / windows-latest HIGH, plus standalone windows-latest job HIGH; checkout@v4 ×2 WARN. Disposition: accepted deliberately. |
 | cn-ai-coding-workflow-lite `test-install.yml` | 4 | 2 | Same workflow, lite edition — same findings. |
-| runner-drift-audit `pending-workflow-scope/self-test.yml` | 0 | 2 | Pins `ubuntu-24.04` in both jobs; only checkout@v4 WARN ×2. File still unpushed (token lacks workflow scope) — state on Oct 20: ___ |
+| runner-drift-audit self-test (was `pending-workflow-scope/self-test.yml`) | 0 | 2 | Pins `ubuntu-24.04` in both jobs; only checkout@v4 WARN ×2. File has since been pushed as `.github/workflows/self-test.yml` (workflow scope granted Oct 15; commit `662c3bd`) — the runner now scans the repo root for this target; see the Oct 19 day-1 snapshot. State on Oct 20: ___ |
 | Manual: container images by tag | inert | — | No `container:`/`services:`/image pulls in inventory. |
 | Manual: locale / timezone defaults | inert | — | Steps count files and grep frontmatter only. |
 
