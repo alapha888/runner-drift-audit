@@ -16,6 +16,13 @@ Rules are grounded in the official actions/runner-images toolsets
     (p7zip-full replaced by 7zip); ruby gem fastlane no longer preinstalled
   - Go default 1.24 -> 1.26
 
+A second rule source is GitHub's own changelog: the macOS 14 runner
+image (labels macos-14, macos-14-large, macos-14-xlarge) is retired on
+November 2, 2026, after scheduled brownouts through October 2026
+(GitHub Changelog, 2026-10-01). A pinned label does not drift — it
+stops working — so those labels are reported as RETIRED_LABEL (HIGH)
+wherever a runner label can appear.
+
 Usage: python3 runner_drift_audit.py [path-to-repo-or-workflows-dir]
            [--sarif FILE] [--json FILE] [--summary-file FILE]
 Exit code: 1 if any HIGH finding, else 0. Stdlib only.
@@ -105,6 +112,12 @@ LIST_KEY_RE = re.compile(r"^\s*-?\s*([\w.-]+):\s*\[([^\]]*)\]")
 LIST_ITEM_LABEL_RE = re.compile(
     r"^\s*-\s*['\"]?((?:ubuntu|windows|macos)-[A-Za-z0-9._-]*latest)"
     r"['\"]?\s*(#.*)?$")
+# Bare list items carrying a retired label (block matrix axis or a
+# multi-line `runs-on:` list). The label set is exact — see
+# RETIRED_LABELS — so this cannot drift into flagging pinned labels
+# that are still supported.
+LIST_ITEM_RETIRED_RE = re.compile(
+    r"^\s*-\s*['\"]?(macos-14(?:-large|-xlarge)?)['\"]?\s*(#.*)?$")
 RUNNER_PREFIXES = ("ubuntu-", "windows-", "macos-")
 # A `runs-on:` value that is exactly one env/vars/inputs expression, e.g.
 # `runs-on: ${{ env.RUNNER_LABEL }}`. The label then lives wherever that
@@ -133,6 +146,27 @@ def floating_label_message(lab, via=""):
             "new image generation on the provider's schedule, outside this "
             "scanner's Ubuntu migration window. Pin a versioned label if "
             "this job needs to stay stable.")
+
+
+# Labels retired outright on a published date (GitHub Changelog,
+# 2026-10-01, "GitHub Actions: macOS 14 runner image retirement").
+# Only labels with a published retirement date are listed; a versioned
+# label not listed here is not assumed retired. Jobs on these labels
+# fail during scheduled brownouts in October 2026 and stop working
+# entirely on the retirement date.
+RETIRED_LABELS = {
+    "macos-14": "November 2, 2026",
+    "macos-14-large": "November 2, 2026",
+    "macos-14-xlarge": "November 2, 2026",
+}
+
+
+def retired_label_message(lab, via=""):
+    return (f"runner label '{lab}' is retired{via}; the macOS 14 runner "
+            f"image is removed on {RETIRED_LABELS[lab]} and jobs using it "
+            "fail during scheduled brownouts before that date (GitHub "
+            "Changelog, 2026-10-01). Move to macos-15, or to macos-latest "
+            "(macos-26) if a floating label is acceptable.")
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 SEG_SPLIT = re.compile(r"&&|\|\||;|\|")
 QUOTE_RE = re.compile(r"\"[^\"\n]*\"|'[^'\n]*'")
@@ -180,20 +214,31 @@ def audit_file(path):
         ma = ASSIGN_LABEL_RE.match(raw.split("#")[0])
         if ma:
             assignments[ma.group(1)] = ma.group(2)
-    # A floating label assigned to a *RUNNER*-named key that the file
-    # actually references through an expression is a real label, one hop
-    # away from the `runs-on:` line. Unreferenced *RUNNER* keys (report
-    # baselines, test fixtures) are not flagged.
+    # A floating or retired label assigned to a *RUNNER*-named key that
+    # the file actually references through an expression is a real
+    # label, one hop away from the `runs-on:` line. The same holds for
+    # a scalar assignment to a key the file references as `matrix.<key>`
+    # (the usual case: a `matrix.include:` entry such as `- os: macos-14`).
+    # Unreferenced keys (report baselines, test fixtures) are not flagged.
     for idx, raw in enumerate(lines, 1):
         ma = ASSIGN_LABEL_RE.match(raw.split("#")[0])
-        if (ma and ma.group(2).endswith("-latest")
-                and "runner" in ma.group(1).lower()
-                and ma.group(1) in expr_refs):
+        if not ma:
+            continue
+        key, lab = ma.group(1), ma.group(2)
+        if "runner" in key.lower() and key in expr_refs:
+            via = (f" (assigned to '{key}' and "
+                   "referenced through an expression)")
+        elif key in matrix_keys:
+            via = (f" (assigned to '{key}', a matrix key "
+                   "referenced in this file)")
+        else:
+            continue
+        if lab.endswith("-latest"):
             findings.append(("HIGH", idx, "FLOATING_LABEL",
-                             floating_label_message(
-                                 ma.group(2),
-                                 f" (assigned to '{ma.group(1)}' and "
-                                 "referenced through an expression)")))
+                             floating_label_message(lab, via)))
+        elif lab in RETIRED_LABELS:
+            findings.append(("HIGH", idx, "RETIRED_LABEL",
+                             retired_label_message(lab, via)))
     on_ubuntu = bool(re.search(r"ubuntu-(latest|24\.04|26\.04)", text))
     setup_present = {k: (v and v in text) for k, v in SETUP_FOR.items()}
     seen_drift = set()
@@ -225,7 +270,24 @@ def audit_file(path):
                 me = SINGLE_EXPR_RE.match(m.group(1).split("#")[0].strip())
                 if me:
                     kind, name = me.group(1), me.group(2)
-                    if not (kind == "env" and name in assignments):
+                    if (kind == "env" and name in assignments
+                            and "runner" not in name.lower()
+                            and name not in matrix_keys):
+                        # Resolved in this file, but under a key name
+                        # the assignment pass does not flag: judge the
+                        # label here instead of staying silent. A
+                        # supported pinned label resolves clean.
+                        lab = assignments[name]
+                        via = f" (set by 'env.{name}' in this file)"
+                        if lab.endswith("-latest"):
+                            findings.append(
+                                ("HIGH", i, "FLOATING_LABEL",
+                                 floating_label_message(lab, via)))
+                        elif lab in RETIRED_LABELS:
+                            findings.append(
+                                ("HIGH", i, "RETIRED_LABEL",
+                                 retired_label_message(lab, via)))
+                    elif not (kind == "env" and name in assignments):
                         findings.append(
                             ("WARN", i, "INDIRECT_RUNS_ON",
                              f"runner label is fed by the expression "
@@ -235,12 +297,15 @@ def audit_file(path):
                              "variables, or caller inputs) and pin it there "
                              "if it floats."))
                 else:
-                    labels = [t.strip(" '\"[],")
+                    labels = [t.split("#")[0].strip(" '\"[],")
                               for t in m.group(1).split(",")]
                     for lab in labels:
                         if lab.endswith("-latest"):
                             findings.append(("HIGH", i, "FLOATING_LABEL",
                                              floating_label_message(lab)))
+                        elif lab in RETIRED_LABELS:
+                            findings.append(("HIGH", i, "RETIRED_LABEL",
+                                             retired_label_message(lab)))
             else:
                 mb = LIST_KEY_RE.match(line)
                 if mb and (mb.group(1) == "os"
@@ -252,6 +317,11 @@ def audit_file(path):
                                              floating_label_message(
                                                  lab, " (referenced in a list, "
                                                  "e.g. a matrix axis)")))
+                        elif lab in RETIRED_LABELS:
+                            findings.append(("HIGH", i, "RETIRED_LABEL",
+                                             retired_label_message(
+                                                 lab, " (referenced in a list, "
+                                                 "e.g. a matrix axis)")))
                 else:
                     mi = LIST_ITEM_LABEL_RE.match(line)
                     if mi:
@@ -260,6 +330,15 @@ def audit_file(path):
                                              mi.group(1), " (referenced as a "
                                              "list item, e.g. a matrix axis or "
                                              "a multi-line runs-on list)")))
+                    else:
+                        mr = LIST_ITEM_RETIRED_RE.match(line)
+                        if mr:
+                            findings.append(("HIGH", i, "RETIRED_LABEL",
+                                             retired_label_message(
+                                                 mr.group(1),
+                                                 " (referenced as a list "
+                                                 "item, e.g. a matrix axis or "
+                                                 "a multi-line runs-on list)")))
             m = USES_RE.search(line)
             if m:
                 ref = m.group(1).strip("'\"")
@@ -288,6 +367,12 @@ SARIF_RULES = {
         "Floating runner label",
         "A runs-on label such as ubuntu-latest moves to a new runner "
         "image on the provider's schedule; pin a versioned label."),
+    "RETIRED_LABEL": (
+        "Retired runner label",
+        "A runs-on label whose runner image is retired on a published "
+        "date (macos-14 family, removed November 2, 2026); jobs using "
+        "it fail during scheduled brownouts before that date and stop "
+        "working entirely afterwards. Move to a supported label."),
     "INDIRECT_RUNS_ON": (
         "Runner label supplied indirectly",
         "A runs-on value fed by an env/vars/inputs expression cannot be "
@@ -324,7 +409,8 @@ def build_sarif(per_file, root):
             "fullDescription": {"text": full},
             "defaultConfiguration": {
                 "level": "error" if rule_id in (
-                    "FLOATING_LABEL", "REMOVED_TOOL") else "warning",
+                    "FLOATING_LABEL", "RETIRED_LABEL",
+                    "REMOVED_TOOL") else "warning",
             },
         })
     results = []
@@ -448,7 +534,8 @@ def build_markdown_summary(per_file, root):
     lines.append(
         "Rule sources: actions/runner-images toolset-2404.json vs "
         "toolset-2604.json (ubuntu-latest moves 24.04 -> 26.04, "
-        "Oct 19 - Nov 19, 2026).")
+        "Oct 19 - Nov 19, 2026); GitHub Changelog 2026-10-01 "
+        "(macOS 14 runner image retirement, November 2, 2026).")
     lines.append("")
     return "\n".join(lines)
 
@@ -525,7 +612,7 @@ def main(argv):
                 total_high += 1
             print(f"  [{sev}] line {ln} {rule}: {msg}")
     print(f"\nScanned {len(files)} workflow file(s); HIGH findings: {total_high}.")
-    print("Rule sources: actions/runner-images toolset-2404.json vs toolset-2604.json.")
+    print("Rule sources: actions/runner-images toolset-2404.json vs toolset-2604.json; GitHub Changelog 2026-10-01 (macOS 14 retirement).")
     if sarif_path:
         with open(sarif_path, "w", encoding="utf-8") as fh:
             json.dump(build_sarif(per_file, root), fh, indent=2)
