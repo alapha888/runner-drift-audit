@@ -33,6 +33,7 @@ The full background table behind the Ubuntu rules is [Ubuntu 26.04 toolset chang
 
 - [October 19 eve checklist](october-19-eve-checklist.md) — five steps for the evening before both October 19 changes. Written for October 18; the steps still work as a pre-window check before any later brownout.
 - [October 19 day guide](october-19-day-guide.md) — the hour-by-hour timeline for the first day, and first-failure triage.
+- [After the first brownout](after-the-first-brownout.md) — the morning-after checklist for October 20: sorting the night's failures by the clock, why a green run today is a reprieve rather than a fix, and migrating while both labels still work.
 - [Rollout-week playbook](rollout-week-playbook.md) — for the weeks when the same workflow can land on either image from one run to the next (October 19 – November 19, 2026).
 
 ## Field reports (what happened when the scanner ran on real repositories)
