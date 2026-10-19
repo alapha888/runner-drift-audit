@@ -94,6 +94,7 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 | Removed tool invoked in a run step | HIGH | `hg` (mercurial removed), `mediainfo`, `sphinxsearch`, `haveged`, `fastlane` gem, globally preinstalled `webpack`/`gulp`/`grunt`/`parcel`/`lerna`/`newman`/`tsc` (only `n` and `yarn` remain), `gcc-12`, `clang-16/17`, `p7zip` — remediation guide: [docs/replacing-removed-tools.md](docs/replacing-removed-tools.md) |
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 — remediation guide: [docs/pinning-default-versions.md](docs/pinning-default-versions.md) |
 | Action referenced by mutable tag instead of a full SHA | WARN | `uses: actions/checkout@v4` — remediation guide: [docs/pinning-actions-by-sha.md](docs/pinning-actions-by-sha.md) |
+| Runner label supplied indirectly | WARN | `runs-on: ${{ vars.RUNNER_LABEL }}` (also single `${{ env.* }}` / `${{ inputs.* }}` expressions the scanner cannot resolve from the file) — remediation guide: [docs/resolving-indirect-runs-on.md](docs/resolving-indirect-runs-on.md) |
 
 ## Machine-readable differences list
 
@@ -116,7 +117,8 @@ Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
 5. **Enumerate container images by tag.** List the images your workflows pull by tag (service containers, `container:` jobs, `docker pull` steps). Their base can move to the new image generation on a schedule you do not control, independently of the runner label — pin by digest or to an explicit tag where the image contents matter. This is a manual pass; the scanner does not inspect image references.
 6. **Check locale and timezone defaults.** If anything in your pipeline diffs or parses log output, timestamps, or sorted text, record the current locale/timezone behaviour and re-check it after the move. Default changes here bite even single-language projects, and they do not show up as version bumps.
 7. **Review action refs.** Mutable tags are flagged as WARN; pin to a full SHA where your policy requires it — see the [pinning guide](docs/pinning-actions-by-sha.md) for resolving a tag to its SHA, writing the pin with a version comment, and keeping pins fresh with Dependabot.
-8. **Re-run** until no HIGH findings remain, and keep the final report with the migration PR so reviewers can see what was checked.
+8. **Resolve indirect runner labels.** Where a WARN flags a `runs-on:` fed by a single `env` / `vars` / `inputs` expression, look the value up where it is set (repository variables, caller inputs, or an `env` default outside the file) and pin it there if it floats — see the [indirect-labels guide](docs/resolving-indirect-runs-on.md) for the per-source fix paths and for why the warning stays visible after a `vars` / `inputs` value is pinned at its source.
+9. **Re-run** until no HIGH findings remain, and keep the final report with the migration PR so reviewers can see what was checked.
 
 Treat the checklist and the differences list as a filter, not a list to shorten: for every row that does not apply, write "not installed / not used, checked on <date>" instead of deleting it. Proving most rows inert is the value — an unchecked row and a checked-inert row look identical in a shortened list, and only one of them is evidence.
 
