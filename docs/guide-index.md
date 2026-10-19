@@ -40,6 +40,7 @@ The full background table behind the Ubuntu rules is [Ubuntu 26.04 toolset chang
 - [Pre-cutover self-audit — 2026-10-13](../field-reports/2026-10-13-pre-cutover-self-audit.md) — the migration checklist run against the author's own workflows before the window opened.
 - [October 19, morning: I scanned my own repos first](../field-reports/2026-10-19-day1-self-scan.md) — five repositories, 11 HIGH findings, and one repository still on `macos-14` fixed before that night's brownout.
 - [Day-1 re-walk snapshot — October 19, 2026](../field-reports/2026-10-19-day1-rewalk-snapshot.md) — an intermediate run of the October 20 re-walk protocol: the October 13 baseline reproduces exactly.
+- [Brownout eve: the rest of the estate, swept](../field-reports/2026-10-19-brownout-eve-estate-sweep.md) — the other 17 non-fork repos scanned from fresh clones an hour before the first brownout; the only HIGH findings were the twice-recorded deliberate `windows-latest` float in pubaudit-windows.
 
 ## What this index does not do
 
