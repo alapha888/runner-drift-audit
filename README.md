@@ -129,6 +129,9 @@ Treat the checklist and the differences list as a filter, not a list to shorten:
 ## Field reports
 
 - [2026-10-13 — pre-cutover self-audit](field-reports/2026-10-13-pre-cutover-self-audit.md): this checklist run against the workflows maintained here, including where the scanner itself bent (it missed matrix-axis labels until v0.3.1).
+- [2026-10-19 — day-1 self-scan](field-reports/2026-10-19-day1-self-scan.md): five repositories scanned on the morning the window opened — 11 HIGH findings, and one repository still on `macos-14` fixed before that night's brownout.
+- [2026-10-19 — brownout-eve estate sweep](field-reports/2026-10-19-brownout-eve-estate-sweep.md): the other 17 non-fork repos scanned from fresh clones an hour before the first brownout.
+- [2026-10-20 — post-cutover self-audit](field-reports/2026-10-20-post-cutover-self-audit.md): the frozen October 13 baseline re-run after the window opened — identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves.
 
 ## Limits
 
