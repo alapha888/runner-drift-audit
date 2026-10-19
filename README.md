@@ -89,7 +89,7 @@ Rules are grounded in a diff of the official `actions/runner-images` toolsets (`
 
 | Rule | Severity | Examples from the official toolset diff |
 |---|---|---|
-| Floating runner label | HIGH | `runs-on: ubuntu-latest` (also quoted / list forms, and labels referenced from a matrix axis or other list) |
+| Floating runner label | HIGH | `runs-on: ubuntu-latest` (also quoted / list forms, and labels referenced from a matrix axis or other list) — remediation guide: [docs/pinning-runner-labels.md](docs/pinning-runner-labels.md) |
 | Retired runner label | HIGH | `runs-on: macos-14` (also `macos-14-large` / `macos-14-xlarge`, in any of the same forms) — the macOS 14 image is retired on November 2, 2026, and jobs on it fail during scheduled brownouts before that date (GitHub Changelog, 2026-10-01). A pinned label does not drift; it stops working. Full guide: [docs/macos-14-retirement.md](docs/macos-14-retirement.md) |
 | Removed tool invoked in a run step | HIGH | `hg` (mercurial removed), `mediainfo`, `sphinxsearch`, `haveged`, `fastlane` gem, globally preinstalled `webpack`/`gulp`/`grunt`/`parcel`/`lerna`/`newman`/`tsc` (only `n` and `yarn` remain), `gcc-12`, `clang-16/17`, `p7zip` — remediation guide: [docs/replacing-removed-tools.md](docs/replacing-removed-tools.md) |
 | Default version drift (no setup action pins it) | WARN | Java 17→25 (Java 8 removed), Node 22→24, PHP 8.3→8.5 only, PostgreSQL 16→18, clang 18→21, Go 1.24→1.26, CMake unpinned (was held at 3.31.6 to avoid CMake 4.0 issues), Docker 28→29 / Compose 2.38→5.1 — remediation guide: [docs/pinning-default-versions.md](docs/pinning-default-versions.md) |

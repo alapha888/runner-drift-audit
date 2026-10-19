@@ -4,7 +4,7 @@ The guides in this repository grew one at a time — a page per rule, per output
 
 ## Start here
 
-- **You have not scanned yet.** Run the scanner first (see the [README](https://github.com/alapha888/runner-drift-audit#readme)); the guides below assume you have findings in hand. The README's migration checklist is also the fix path for a floating runner label (`FLOATING_LABEL`, HIGH) — that rule has no standalone remediation page, because the fix is a choice the checklist lays out: pin to `ubuntu-24.04` for now, or move deliberately to `ubuntu-26.04`.
+- **You have not scanned yet.** Run the scanner first (see the [README](https://github.com/alapha888/runner-drift-audit#readme)); the guides below assume you have findings in hand.
 - **You have findings and want to fix them.** Go to the per-rule guides below — one page per rule ID in your output.
 - **You want the findings somewhere other than a log.** Go to the output-format guides: SARIF, JSON, job summary, and CI gating.
 - **You are working during the rollout window (October 19 – November 19, 2026).** Go to the timeline guides.
@@ -18,7 +18,7 @@ The guides in this repository grew one at a time — a page per rule, per output
 | `DEFAULT_DRIFT` | WARN | [Pinning default tool versions](pinning-default-versions.md) — per-tool pins, and why some warnings stay visible after pinning. |
 | `UNPINNED_ACTION` | WARN | [Pinning actions by commit SHA](pinning-actions-by-sha.md) — resolving a tag to its SHA, writing the pin with a version comment, and keeping pins fresh with Dependabot. |
 | `INDIRECT_RUNS_ON` | WARN | [Resolving indirect runner labels](resolving-indirect-runs-on.md) — per-source fix paths for labels fed by `env` / `vars` / `inputs`, and why the warning can stay visible after a fix at the source. |
-| `FLOATING_LABEL` | HIGH | No standalone page — see the README migration checklist and the [rollout-week playbook](rollout-week-playbook.md). |
+| `FLOATING_LABEL` | HIGH | [Pinning floating runner labels](pinning-runner-labels.md) — the two deliberate pins for `ubuntu-latest`, what to do with the other `-latest` labels, and what a re-scan should show. |
 
 The full background table behind the Ubuntu rules is [Ubuntu 26.04 toolset changes](ubuntu-2604-toolset-changes.md): every removed tool, global removal, rename, and default-version jump, with what to do for each. The same differences ship as a machine-readable CSV in the repository root.
 
