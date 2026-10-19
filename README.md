@@ -104,6 +104,8 @@ Human-readable version: [Ubuntu 26.04 toolset changes](docs/ubuntu-2604-toolset-
 
 For the rollout window itself (October 19 – November 19, 2026), see the [rollout-week playbook](docs/rollout-week-playbook.md) — what to do when the same workflow can land on either image from one run to the next.
 
+Gating CI on the scan? [CI gate patterns](docs/ci-gate-patterns.md) documents the exit-code contract (including why a usage error shares exit code 1 with real findings, and where exit code 2 comes from) and three patterns: report-only first, enforce on workflow changes, and a scheduled re-scan after scanner updates.
+
 Starting October 19? The [October 19 eve checklist](docs/october-19-eve-checklist.md) covers the evening before both October 19 changes — the `ubuntu-latest` rollout opening and the first scheduled `macos-14` brownout (14:00 UTC) — in five steps. On the day itself, the [October 19 day guide](docs/october-19-day-guide.md) gives the hour-by-hour timeline and first-failure triage.
 
 ## Migration checklist
