@@ -108,6 +108,8 @@ Gating CI on the scan? [CI gate patterns](docs/ci-gate-patterns.md) documents th
 
 Starting October 19? The [October 19 eve checklist](docs/october-19-eve-checklist.md) covers the evening before both October 19 changes — the `ubuntu-latest` rollout opening and the first scheduled `macos-14` brownout (14:00 UTC) — in five steps. On the day itself, the [October 19 day guide](docs/october-19-day-guide.md) gives the hour-by-hour timeline and first-failure triage.
 
+Looking for a specific guide? The [guide index](docs/guide-index.md) maps every guide in this repository — per-rule remediation, output formats, timeline guides, and field reports — to the job it is for.
+
 ## Migration checklist
 
 Before the `ubuntu-latest` label moves (October 19 – November 19, 2026):
