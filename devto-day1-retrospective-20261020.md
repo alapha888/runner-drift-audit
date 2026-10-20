@@ -22,7 +22,7 @@ Before writing anything else about either change, I ran my own scanner — Runne
 | pubaudit-windows | 2 | Floating `windows-latest` in both workflows |
 | runner-drift-audit | 0 | — (2 WARN: `actions/checkout@v4` not pinned to a SHA) |
 
-Eleven HIGH findings, all floating or retired labels — in the repos of the person who wrote the scanner. Plus a WARN in almost every file: `actions/checkout` referenced by the mutable `v4` tag instead of a full commit SHA.
+Eleven HIGH findings in total (1 + 4 + 4 + 2 + 0 across the table), all floating or retired labels — in the repos of the person who wrote the scanner. Separate from those, almost every file also carried a WARN: `actions/checkout` referenced by the mutable `v4` tag instead of a full commit SHA.
 
 ## The one that would have gone red that night
 
@@ -49,7 +49,7 @@ The window is still open: `ubuntu-latest` keeps rolling through November 19, and
 python3 runner_drift_audit.py path/to/your-repo --json day1.json --summary-file day1-summary.md
 ```
 
-The scanner is free and open source (MIT, single-file Python, standard library only): https://github.com/alapha888/runner-drift-audit — the full morning scan, including the rows I left alone and why, is in `field-reports/2026-10-19-day1-self-scan.md`. The next day I re-ran the frozen October 13 baseline inventory for the scheduled comparison with a reader who walked the same checklist on his own machine; nothing moved, and why that is itself the finding is written up here: https://dev.to/alapha888/post-cutover-re-walk-nothing-moved-and-why-that-is-the-finding-287o
+The scanner is free and open source (MIT, single-file Python, standard library only): https://github.com/alapha888/runner-drift-audit — the full morning scan, including the rows I left alone and why, is in `field-reports/2026-10-19-day1-self-scan.md`. The next day I re-ran the frozen October 13 baseline inventory for the scheduled comparison with a reader who walked the same checklist on his own machine; nothing in that baseline inventory moved (the `photoveil-ios` fix above was part of the day-1 scan, not of that baseline), and why that is itself the finding is written up here: https://dev.to/alapha888/post-cutover-re-walk-nothing-moved-and-why-that-is-the-finding-287o
 
 If you maintain many repositories, a paid batch edition ($29 one-time) scans a whole workspace into one merged HTML report: https://alapha888.gumroad.com/l/mepra — the free single-repo tool stays free either way.
 
