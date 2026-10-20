@@ -28,7 +28,7 @@ The same scanner ships as a composite action in this repository, so a workflow c
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.7
+- uses: alapha888/runner-drift-audit@v0.3.8
   with:
     path: "."              # directory that contains .github/workflows
     fail-on-high: "true"   # set to "false" to report findings without failing
@@ -42,7 +42,7 @@ Add `--sarif FILE` (CLI) or the `sarif-file` input (Action) to also write findin
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: alapha888/runner-drift-audit@v0.3.7
+- uses: alapha888/runner-drift-audit@v0.3.8
   with:
     path: "."
     fail-on-high: "false"   # let the upload step run even with HIGH findings
