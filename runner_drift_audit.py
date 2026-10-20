@@ -201,6 +201,26 @@ def find_workflows(root):
 
 def audit_file(path):
     findings = []  # (severity, line_no, rule, message)
+    # One physical line can reach the same label rule through two
+    # channels (e.g. a `matrix.include:` entry `- runs-on: ubuntu-latest`
+    # is seen both by the assignment pass below, because `runs-on` is a
+    # referenced matrix key, and by the main `runs-on:` pass). Dedupe
+    # label findings on (line, rule, label) so each is reported once,
+    # while genuinely different findings — another line, another rule,
+    # or another label on the same line — are still reported separately.
+    # Non-label findings dedupe on their full message instead.
+    seen_findings = set()
+
+    def add_finding(severity, line_no, rule, message, label=None):
+        if label is not None:
+            key = (line_no, rule, label)
+        else:
+            key = (line_no, rule, message)
+        if key in seen_findings:
+            return
+        seen_findings.add(key)
+        findings.append((severity, line_no, rule, message))
+
     with open(path, encoding="utf-8", errors="replace") as fh:
         lines = fh.read().splitlines()
     text = "\n".join(lines)
@@ -234,11 +254,11 @@ def audit_file(path):
         else:
             continue
         if lab.endswith("-latest"):
-            findings.append(("HIGH", idx, "FLOATING_LABEL",
-                             floating_label_message(lab, via)))
+            add_finding("HIGH", idx, "FLOATING_LABEL",
+                        floating_label_message(lab, via), label=lab)
         elif lab in RETIRED_LABELS:
-            findings.append(("HIGH", idx, "RETIRED_LABEL",
-                             retired_label_message(lab, via)))
+            add_finding("HIGH", idx, "RETIRED_LABEL",
+                        retired_label_message(lab, via), label=lab)
     on_ubuntu = bool(re.search(r"ubuntu-(latest|24\.04|26\.04)", text))
     setup_present = {k: (v and v in text) for k, v in SETUP_FOR.items()}
     seen_drift = set()
@@ -280,32 +300,34 @@ def audit_file(path):
                         lab = assignments[name]
                         via = f" (set by 'env.{name}' in this file)"
                         if lab.endswith("-latest"):
-                            findings.append(
-                                ("HIGH", i, "FLOATING_LABEL",
-                                 floating_label_message(lab, via)))
+                            add_finding(
+                                "HIGH", i, "FLOATING_LABEL",
+                                floating_label_message(lab, via), label=lab)
                         elif lab in RETIRED_LABELS:
-                            findings.append(
-                                ("HIGH", i, "RETIRED_LABEL",
-                                 retired_label_message(lab, via)))
+                            add_finding(
+                                "HIGH", i, "RETIRED_LABEL",
+                                retired_label_message(lab, via), label=lab)
                     elif not (kind == "env" and name in assignments):
-                        findings.append(
-                            ("WARN", i, "INDIRECT_RUNS_ON",
+                        add_finding(
+                            "WARN", i, "INDIRECT_RUNS_ON",
                              f"runner label is fed by the expression "
                              f"'${{{{ {kind}.{name} }}}}' and this scanner "
                              "cannot resolve it; check where that value is "
                              "set (env defaults in this file, repository "
                              "variables, or caller inputs) and pin it there "
-                             "if it floats."))
+                             "if it floats.")
                 else:
                     labels = [t.split("#")[0].strip(" '\"[],")
                               for t in m.group(1).split(",")]
                     for lab in labels:
                         if lab.endswith("-latest"):
-                            findings.append(("HIGH", i, "FLOATING_LABEL",
-                                             floating_label_message(lab)))
+                            add_finding("HIGH", i, "FLOATING_LABEL",
+                                        floating_label_message(lab),
+                                        label=lab)
                         elif lab in RETIRED_LABELS:
-                            findings.append(("HIGH", i, "RETIRED_LABEL",
-                                             retired_label_message(lab)))
+                            add_finding("HIGH", i, "RETIRED_LABEL",
+                                        retired_label_message(lab),
+                                        label=lab)
             else:
                 mb = LIST_KEY_RE.match(line)
                 if mb and (mb.group(1) == "os"
@@ -313,50 +335,54 @@ def audit_file(path):
                     for raw in mb.group(2).split(","):
                         lab = raw.split("#")[0].strip(" '\"")
                         if lab.endswith("-latest") and is_runner_label(lab):
-                            findings.append(("HIGH", i, "FLOATING_LABEL",
-                                             floating_label_message(
-                                                 lab, " (referenced in a list, "
-                                                 "e.g. a matrix axis)")))
+                            add_finding("HIGH", i, "FLOATING_LABEL",
+                                        floating_label_message(
+                                            lab, " (referenced in a list, "
+                                            "e.g. a matrix axis)"),
+                                        label=lab)
                         elif lab in RETIRED_LABELS:
-                            findings.append(("HIGH", i, "RETIRED_LABEL",
-                                             retired_label_message(
-                                                 lab, " (referenced in a list, "
-                                                 "e.g. a matrix axis)")))
+                            add_finding("HIGH", i, "RETIRED_LABEL",
+                                        retired_label_message(
+                                            lab, " (referenced in a list, "
+                                            "e.g. a matrix axis)"),
+                                        label=lab)
                 else:
                     mi = LIST_ITEM_LABEL_RE.match(line)
                     if mi:
-                        findings.append(("HIGH", i, "FLOATING_LABEL",
-                                         floating_label_message(
-                                             mi.group(1), " (referenced as a "
-                                             "list item, e.g. a matrix axis or "
-                                             "a multi-line runs-on list)")))
+                        add_finding("HIGH", i, "FLOATING_LABEL",
+                                    floating_label_message(
+                                        mi.group(1), " (referenced as a "
+                                        "list item, e.g. a matrix axis or "
+                                        "a multi-line runs-on list)"),
+                                    label=mi.group(1))
                     else:
                         mr = LIST_ITEM_RETIRED_RE.match(line)
                         if mr:
-                            findings.append(("HIGH", i, "RETIRED_LABEL",
-                                             retired_label_message(
-                                                 mr.group(1),
-                                                 " (referenced as a list "
-                                                 "item, e.g. a matrix axis or "
-                                                 "a multi-line runs-on list)")))
+                            add_finding("HIGH", i, "RETIRED_LABEL",
+                                        retired_label_message(
+                                            mr.group(1),
+                                            " (referenced as a list "
+                                            "item, e.g. a matrix axis or "
+                                            "a multi-line runs-on list)"),
+                                        label=mr.group(1))
             m = USES_RE.search(line)
             if m:
                 ref = m.group(1).strip("'\"")
                 if "@" in ref and not ref.startswith(("./", "docker://")):
                     name, _, version = ref.rpartition("@")
                     if not SHA_RE.match(version):
-                        findings.append(("WARN", i, "UNPINNED_ACTION",
-                                         f"action '{name}' is referenced by mutable tag '{version}', "
-                                         "not a full commit SHA; the tag can move under you."))
+                        add_finding("WARN", i, "UNPINNED_ACTION",
+                                    f"action '{name}' is referenced by mutable tag '{version}', "
+                                    "not a full commit SHA; the tag can move under you.")
         if on_ubuntu and is_run_line:
             for cmd in command_heads(run_text):
                 if cmd in REMOVED_COMMANDS:
-                    findings.append(("HIGH", i, "REMOVED_TOOL", REMOVED_COMMANDS[cmd] + "."))
+                    add_finding("HIGH", i, "REMOVED_TOOL", REMOVED_COMMANDS[cmd] + ".")
             for rx, tool, msg in DEFAULT_DRIFT:
                 if setup_present.get(tool) or tool in seen_drift:
                     continue
                 if rx.search(QUOTE_RE.sub(" ", run_text)):
-                    findings.append(("WARN", i, "DEFAULT_DRIFT", msg + "."))
+                    add_finding("WARN", i, "DEFAULT_DRIFT", msg + ".")
                     seen_drift.add(tool)
                     break
     return findings
