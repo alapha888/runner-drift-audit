@@ -1,0 +1,11 @@
+
+/home/hatch/workspace/independent/cn-ai-coding-workflow-lite/.github/workflows/test-install.yml
+  [HIGH] line 19 FLOATING_LABEL: runner label 'ubuntu-latest' is a floating label (referenced in a list, e.g. a matrix axis); it moves 24.04 -> 26.04 between Oct 19 and Nov 19, 2026. Pin ubuntu-24.04 to stay, or ubuntu-26.04 to migrate deliberately.
+  [HIGH] line 19 FLOATING_LABEL: runner label 'macos-latest' is a floating label (referenced in a list, e.g. a matrix axis); it moves to a new image generation on the provider's schedule, outside this scanner's Ubuntu migration window. Pin a versioned label if this job needs to stay stable.
+  [HIGH] line 19 FLOATING_LABEL: runner label 'windows-latest' is a floating label (referenced in a list, e.g. a matrix axis); it moves to a new image generation on the provider's schedule, outside this scanner's Ubuntu migration window. Pin a versioned label if this job needs to stay stable.
+  [WARN] line 21 UNPINNED_ACTION: action 'actions/checkout' is referenced by mutable tag 'v4', not a full commit SHA; the tag can move under you.
+  [HIGH] line 48 FLOATING_LABEL: runner label 'windows-latest' is a floating label; it moves to a new image generation on the provider's schedule, outside this scanner's Ubuntu migration window. Pin a versioned label if this job needs to stay stable.
+  [WARN] line 50 UNPINNED_ACTION: action 'actions/checkout' is referenced by mutable tag 'v4', not a full commit SHA; the tag can move under you.
+
+Scanned 1 workflow file(s); HIGH findings: 4.
+Rule sources: actions/runner-images toolset-2404.json vs toolset-2604.json; GitHub Changelog 2026-10-01 (macOS 14 retirement).

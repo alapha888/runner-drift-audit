@@ -43,6 +43,7 @@ The full background table behind the Ubuntu rules is [Ubuntu 26.04 toolset chang
 - [Day-1 re-walk snapshot — October 19, 2026](../field-reports/2026-10-19-day1-rewalk-snapshot.md) — an intermediate run of the October 20 re-walk protocol: the October 13 baseline reproduces exactly.
 - [Brownout eve: the rest of the estate, swept](../field-reports/2026-10-19-brownout-eve-estate-sweep.md) — the other 17 non-fork repos scanned from fresh clones an hour before the first brownout; the only HIGH findings were the twice-recorded deliberate `windows-latest` float in pubaudit-windows.
 - [Post-cutover self-audit — 2026-10-20](../field-reports/2026-10-20-post-cutover-self-audit.md) — the frozen October 13 baseline re-run with scanner v0.3.7 after the window opened: identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves, and a version-honesty table separating scanner changes from platform effects.
+- [Day-3 re-walk — 2026-10-21](../field-reports/2026-10-21-day3-rewalk.md) — the same frozen inventory re-run on day 3 of the window with scanner v0.3.8: identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the v0.3.8 dedupe fix recorded as scanner growth, not a migration effect.
 
 ## What this index does not do
 
