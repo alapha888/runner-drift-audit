@@ -130,8 +130,11 @@ Treat the checklist and the differences list as a filter, not a list to shorten:
 
 - [2026-10-13 — pre-cutover self-audit](field-reports/2026-10-13-pre-cutover-self-audit.md): this checklist run against the workflows maintained here, including where the scanner itself bent (it missed matrix-axis labels until v0.3.1).
 - [2026-10-19 — day-1 self-scan](field-reports/2026-10-19-day1-self-scan.md): five repositories scanned on the morning the window opened — 11 HIGH findings, and one repository still on `macos-14` fixed before that night's brownout.
+- [2026-10-19 — day-1 re-walk snapshot](field-reports/2026-10-19-day1-rewalk-snapshot.md): an intermediate run of the October 20 re-walk protocol — the October 13 baseline reproduces exactly.
 - [2026-10-19 — brownout-eve estate sweep](field-reports/2026-10-19-brownout-eve-estate-sweep.md): the other 17 non-fork repos scanned from fresh clones an hour before the first brownout.
 - [2026-10-20 — post-cutover self-audit](field-reports/2026-10-20-post-cutover-self-audit.md): the frozen October 13 baseline re-run after the window opened — identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves.
+- [2026-10-21 — day-3 re-walk](field-reports/2026-10-21-day3-rewalk.md): the frozen October 13 baseline re-run on day 3 of the window with scanner v0.3.8 — identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves, and the v0.3.8 dedupe fix recorded as scanner growth, not a migration effect.
+- [2026-10-22 — day-4 re-walk](field-reports/2026-10-22-day4-rewalk.md): the frozen October 13 baseline re-run on day 4 of the window with scanner v0.3.8 — identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the scanner byte-identical to October 21, so no scanner-version variable at all.
 
 ## Limits
 
