@@ -150,4 +150,6 @@ The audit rules and findings are identical to this free edition — Pro is the f
 
 ## More from the same author
 
+- **PubAudit** — Free CLI that batch-converts Microsoft Publisher (.pub) files to PDF and verifies every output (OK / REVIEW / FAILED). https://github.com/alapha888/pubaudit
+- **Agent Skills (English)** — Five free skills for commit messages, code review, deep research, meeting notes, and technical-writing proofreading. Free, MIT. https://github.com/alapha888/agent-skills-en
 - Full index of free tools, paid tiers, and waitlists: https://gist.github.com/alapha888/fe51434e80dbc0ef5610aeab38b025f4
