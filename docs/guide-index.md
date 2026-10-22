@@ -45,6 +45,7 @@ The full background table behind the Ubuntu rules is [Ubuntu 26.04 toolset chang
 - [Post-cutover self-audit — 2026-10-20](../field-reports/2026-10-20-post-cutover-self-audit.md) — the frozen October 13 baseline re-run with scanner v0.3.7 after the window opened: identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves, and a version-honesty table separating scanner changes from platform effects.
 - [Day-3 re-walk — 2026-10-21](../field-reports/2026-10-21-day3-rewalk.md) — the same frozen inventory re-run on day 3 of the window with scanner v0.3.8: identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the v0.3.8 dedupe fix recorded as scanner growth, not a migration effect.
 - [Day-4 re-walk — 2026-10-22](../field-reports/2026-10-22-day4-rewalk.md) — the same frozen inventory re-run on day 4 of the window with scanner v0.3.8: identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the scanner byte-identical to October 21, so this re-walk introduces no scanner-version variable at all.
+- [Day-5 re-walk — 2026-10-23](../field-reports/2026-10-23-day5-rewalk.md) — the same frozen inventory re-run on day 5 of the window with scanner v0.3.8: identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the scanner byte-identical to October 20, 21 and 22, so four consecutive re-walks introduce no scanner-version variable at all.
 
 ## What this index does not do
 

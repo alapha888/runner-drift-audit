@@ -135,6 +135,7 @@ Treat the checklist and the differences list as a filter, not a list to shorten:
 - [2026-10-20 — post-cutover self-audit](field-reports/2026-10-20-post-cutover-self-audit.md): the frozen October 13 baseline re-run after the window opened — identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves.
 - [2026-10-21 — day-3 re-walk](field-reports/2026-10-21-day3-rewalk.md): the frozen October 13 baseline re-run on day 3 of the window with scanner v0.3.8 — identical rows (4/2, 4/2, 0/2), no inert-to-flagged moves, and the v0.3.8 dedupe fix recorded as scanner growth, not a migration effect.
 - [2026-10-22 — day-4 re-walk](field-reports/2026-10-22-day4-rewalk.md): the frozen October 13 baseline re-run on day 4 of the window with scanner v0.3.8 — identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the scanner byte-identical to October 21, so no scanner-version variable at all.
+- [2026-10-23 — day-5 re-walk](field-reports/2026-10-23-day5-rewalk.md): the frozen October 13 baseline re-run on day 5 of the window with scanner v0.3.8 — identical rows again (4/2, 4/2, 0/2), no inert-to-flagged moves, and the scanner byte-identical to October 20, 21 and 22, so four consecutive re-walks introduce no scanner-version variable at all.
 
 ## Limits
 
