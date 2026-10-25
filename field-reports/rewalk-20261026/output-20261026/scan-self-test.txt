@@ -1,0 +1,7 @@
+
+/home/hatch/workspace/independent/runner-drift-audit/.github/workflows/self-test.yml
+  [WARN] line 9 UNPINNED_ACTION: action 'actions/checkout' is referenced by mutable tag 'v4', not a full commit SHA; the tag can move under you.
+  [WARN] line 17 UNPINNED_ACTION: action 'actions/checkout' is referenced by mutable tag 'v4', not a full commit SHA; the tag can move under you.
+
+Scanned 1 workflow file(s); HIGH findings: 0.
+Rule sources: actions/runner-images toolset-2404.json vs toolset-2604.json; GitHub Changelog 2026-10-01 (macOS 14 retirement).
